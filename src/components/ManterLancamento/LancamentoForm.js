@@ -13,7 +13,8 @@ import { Channel } from '../../service/EventService'
 
 class LancamentoForm extends Component {
     static defaultProps = {
-        lancamentoEdit: {}
+        lancamentoEdit: {},
+        habilitarNovoLcto: true
     }
 
     constructor(props, context) {
@@ -294,7 +295,7 @@ class LancamentoForm extends Component {
         return (
             <div>
                 <ModalAlert mensagem={state.mensagem} erro={state.erro} alerta={state.alerta} sucesso={state.sucesso} exibirModal={state.excluir || state.erro || state.sucesso} onCancel={this.onCloseModal} />
-                <Button variant="primary" className="mt-2" onClick={this.handleShow}>Novo Lançamento</Button>
+                <Button variant="primary" className="mt-2" onClick={this.handleShow} style={{display: this.props.habilitarNovoLcto ? 'block' : 'none'}}>Novo Lançamento</Button>
                 <Modal show={this.state.show} onHide={this.handleClose} size="lg">
                     <Modal.Header closeButton>
                         <Modal.Title>{state.lancamento.id > 0 ? 'Editar lançamento (' + state.lancamento.id + ')' : 'Novo lançamento'}</Modal.Title>

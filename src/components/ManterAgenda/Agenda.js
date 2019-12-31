@@ -7,6 +7,10 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import Card from 'react-bootstrap/Card';
 import CardDeck from 'react-bootstrap/CardDeck';
+import AgendaDetalhe from './AgendaDetalhe';
+import LancamentoPay from '../ManterLancamento/LancamentoPay';
+import { Channel } from '../../service/EventService';
+import LancamentoForm from '../ManterLancamento/LancamentoForm';
 
 
 
@@ -19,11 +23,13 @@ class Agenda extends Component {
         this.obterTotal = this.obterTotal.bind(this);
         this.carregarOutroMes = this.carregarOutroMes.bind(this);
         this.carregarEventosDoMes = this.carregarEventosDoMes.bind(this);
+        this.carregarDetalhesEvento = this.carregarDetalhesEvento.bind(this);
 
         this.state = {
             agenda: [],
             events: [],
-            aguardar: true
+            aguardar: true,
+            detalharLancamentos: false
         }
 
 
@@ -38,9 +44,7 @@ class Agenda extends Component {
     async onLoad() {
         var resposta = await AgendaService.list();
         if (resposta.sucesso) {
-            let calendarApi = this.calendarRef.current.getApi();
-            var data = calendarApi.getDate();
-            this.setState({ agenda: resposta.objeto });
+            
             this.carregarEventosDoMes(resposta);
         } else {
             alert(resposta.mensagem);
@@ -49,6 +53,7 @@ class Agenda extends Component {
     }
 
     carregarEventosDoMes(resposta) {
+        this.setState({ agenda: resposta.objeto });
         var events = new Array();
         for (var x = 0; x < this.state.agenda.length; x++) {
             var ag = this.state.agenda[x];
@@ -59,7 +64,8 @@ class Agenda extends Component {
                 date: data[2] + '-' + data[1] + '-' + data[0],
                 backgroundColor: ag.tipo === 'DEBITO' ? 'red' : 'green',
                 textColor: 'white',
-                borderColor: 'white'
+                borderColor: 'white',
+                classNames: ['evento']
             }
             events.push(event);
         }
@@ -123,11 +129,24 @@ class Agenda extends Component {
         return total;
     }
 
+    carregarDetalhesEvento(info){
+        const { agenda } = this.state,
+            index = agenda.findIndex(lcto => lcto.id == info.event.id);
+
+        var ag = this.state.agenda[index];
+
+        Channel.emit('agendaDetalhe:view',ag);
+        
+    }
+
     render() {
         const { state } = this;
 
         return (
             <div id="manterAgenda">
+                <LancamentoForm habilitarNovoLcto={false} />
+                <LancamentoPay />
+                <AgendaDetalhe />
                 <div className="load" style={{ display: (state.aguardar ? 'block' : 'none') }} ><i className="fa fa-cog fa-spin fa-3x fa-fw"></i>Aguarde...</div>
                 <div style={{ display: (state.aguardar ? 'none' : 'block') }}>
                     <Container fluid="true">
@@ -140,6 +159,7 @@ class Agenda extends Component {
                                     events={state.events}
                                     locale="pt-BR"
                                     header={{ left: 'btnMesAnterior, btnProximoMes', center: 'title', right: '' }}
+                                    buttonText={{'today':'Hoje'}}
                                     customButtons={{
                                         btnProximoMes: {
                                             'text': 'Próximo mês >>',
@@ -149,7 +169,8 @@ class Agenda extends Component {
                                             'text': '<< Mês anterior',
                                             'click': () => this.carregarOutroMes(true)
                                         }
-                                    }} />
+                                    }}
+                                    eventClick={this.carregarDetalhesEvento} />
                             </Col>
                         </Row>
                         <Row className="mt-3">
