@@ -13,7 +13,9 @@ import Form from 'react-bootstrap/Form'
 import InputGroup from 'react-bootstrap/InputGroup'
 
 class LancamentoSearch extends Component {
-
+    static defaultProps = {
+        pesquisarPorData: true
+    }
     constructor(props) {
         super(props);
 
@@ -284,7 +286,7 @@ class LancamentoSearch extends Component {
                                     </Dropdown.Menu>
                                 </Dropdown>
 
-                                <Dropdown id="pesquisa_periodo" className="mr-1">
+                                <Dropdown id="pesquisa_periodo" className="mr-1" style={{display: this.props.pesquisarPorData ? '' : 'none'}}>
                                     <Dropdown.Toggle variant="primary">
                                         <i className="material-icons md-18 mr-2">date_range</i>
                                         {state.filtroSelecionado.data === "SELECIONARDATAS" ? state.filtroSelecionado.periodoInicio + ' à ' + state.filtroSelecionado.periodoFim : this.getDescricaoTipoData(state.filtroSelecionado.data)}

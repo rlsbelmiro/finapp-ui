@@ -11,6 +11,7 @@ import AgendaDetalhe from './AgendaDetalhe';
 import LancamentoPay from '../ManterLancamento/LancamentoPay';
 import { Channel } from '../../service/EventService';
 import LancamentoForm from '../ManterLancamento/LancamentoForm';
+import LancamentoSearch from '../ManterLancamento/LancamentoSearch';
 
 
 
@@ -24,12 +25,18 @@ class Agenda extends Component {
         this.carregarOutroMes = this.carregarOutroMes.bind(this);
         this.carregarEventosDoMes = this.carregarEventosDoMes.bind(this);
         this.carregarDetalhesEvento = this.carregarDetalhesEvento.bind(this);
+        this.pesquisarLancamentos = this.pesquisarLancamentos.bind(this);
+        this.limparPesquisa = this.limparPesquisa.bind(this);
 
         this.state = {
             agenda: [],
             events: [],
             aguardar: true,
-            detalharLancamentos: false
+            detalharLancamentos: false,
+            filtro: {},
+            anoAtual: 0,
+            mesAtual: 0,
+            filtrouNoBanco: false
         }
 
 
@@ -39,38 +46,52 @@ class Agenda extends Component {
 
     componentDidMount() {
         this.onLoad();
+        Channel.on('lancamento:search', this.pesquisarLancamentos);
+        Channel.on('lancamento:list', this.limparPesquisa);
+    }
+
+    componentWillUnmount() {
+        Channel.removeListener('lancamento:search', this.pesquisarLancamentos);
+        Channel.removeListener('lancamento:list', this.limparPesquisa);
     }
 
     async onLoad() {
         var resposta = await AgendaService.list();
         if (resposta.sucesso) {
-            
-            this.carregarEventosDoMes(resposta);
+            this.carregarEventosDoMes(resposta.objeto);
         } else {
             alert(resposta.mensagem);
             this.setState({ aguardar: false });
         }
     }
 
-    carregarEventosDoMes(resposta) {
-        this.setState({ agenda: resposta.objeto });
+    carregarEventosDoMes(objeto) {
+        this.setState({ agenda: objeto });
         var events = new Array();
         for (var x = 0; x < this.state.agenda.length; x++) {
             var ag = this.state.agenda[x];
-            var data = ag.dataVencimento.split('/');
-            var event = {
-                id: ag.id,
-                title: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(ag.valor.toString().replace('-', '')),
-                date: data[2] + '-' + data[1] + '-' + data[0],
-                backgroundColor: ag.tipo === 'DEBITO' ? 'red' : 'green',
-                textColor: 'white',
-                borderColor: 'white',
-                classNames: ['evento']
+            if (!ag.ocultar) {
+                var data = ag.dataVencimento.split('/');
+                var event = {
+                    id: ag.id,
+                    title: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(ag.valor.toString().replace('-', '')),
+                    date: data[2] + '-' + data[1] + '-' + data[0],
+                    backgroundColor: ag.tipo === 'DEBITO' ? 'red' : 'green',
+                    textColor: 'white',
+                    borderColor: 'white',
+                    classNames: ['evento']
+                }
+                events.push(event);
             }
-            events.push(event);
         }
-
-        this.setState({ events: events, aguardar: false });
+        let calendarApi = this.calendarRef.current.getApi();
+        var data = calendarApi.getDate();
+        var mes = 0;
+        var ano = 0;
+        data = calendarApi.getDate();
+        mes = data.getMonth();
+        ano = data.getFullYear();
+        this.setState({ events: events, aguardar: false, mesAtual: mes, anoAtual: ano });
     }
 
     async carregarOutroMes(anterior) {
@@ -96,7 +117,7 @@ class Agenda extends Component {
             let calendarApi = this.calendarRef.current.getApi();
             var data = calendarApi.getDate();
             this.setState({ agenda: resposta.objeto });
-            this.carregarEventosDoMes(resposta);
+            this.carregarEventosDoMes(resposta.objeto);
         } else {
             alert(resposta.mensagem);
             this.setState({ aguardar: false });
@@ -108,16 +129,16 @@ class Agenda extends Component {
         var total = 0;
         switch (tipo) {
             case "CREDITO":
-                var lctos = state.agenda.filter(function (obj) { return obj.tipo == "CREDITO" });
+                var lctos = state.agenda.filter(function (obj) { return !obj.ocultar && obj.tipo == "CREDITO" });
                 lctos.map(lcto => { total += lcto.valor; });
                 break;
             case "DEBITO":
-                var lctos = state.agenda.filter(function (obj) { return obj.tipo == "DEBITO" });
+                var lctos = state.agenda.filter(function (obj) { return !obj.ocultar && obj.tipo == "DEBITO" });
                 lctos.map(lcto => { total += lcto.valor; });
                 break;
             case "SALDO":
-                var lctoC = state.agenda.filter(function (obj) { return obj.tipo == "CREDITO" });
-                var lctoD = state.agenda.filter(function (obj) { return obj.tipo == "DEBITO" });
+                var lctoC = state.agenda.filter(function (obj) { return !obj.ocultar && obj.tipo == "CREDITO" });
+                var lctoD = state.agenda.filter(function (obj) { return !obj.ocultar && obj.tipo == "DEBITO" });
                 var totalC = 0;
                 var totalD = 0;
                 lctoC.map(lcto => { totalC += lcto.valor; });
@@ -129,15 +150,60 @@ class Agenda extends Component {
         return total;
     }
 
-    carregarDetalhesEvento(info){
+    carregarDetalhesEvento(info) {
         const { agenda } = this.state,
             index = agenda.findIndex(lcto => lcto.id == info.event.id);
 
         var ag = this.state.agenda[index];
 
-        Channel.emit('agendaDetalhe:view',ag);
-        
+        Channel.emit('agendaDetalhe:view', ag);
     }
+
+    async pesquisarLancamentos(filtro) {
+        const { agenda } = this.state;
+
+        if (filtro.carteira.id > 0 || filtro.cartao.id > 0) {
+            filtro.mes = this.state.mesAtual + 1;
+            filtro.ano = this.state.anoAtual;
+
+            var resposta = await AgendaService.pesquisar(filtro);
+            if (resposta.sucesso) {
+                this.carregarEventosDoMes(resposta.objeto);
+            } else {
+                alert(resposta.mensagem);
+                this.carregarEventosDoMes([]);
+            }
+            this.setState({ filtrouNoBanco: true });
+        } else {
+            for (var x = 0; x < agenda.length; x++) {
+                var ag = agenda[x];
+                ag.ocultar = filtro.tipo != null && filtro.tipo !== ag.tipo;
+                if (!ag.ocultar)
+                    ag.ocultar = filtro.situacao != null && filtro.situacao !== ag.situacao
+
+            }
+            this.carregarEventosDoMes(agenda);
+            this.setState({ filtrouNoBanco: false });
+        }
+
+    }
+
+    limparPesquisa() {
+        const { agenda } = this.state;
+
+        if (this.state.filtrouNoBanco) {
+            this.setState({aguardar: true});
+            this.onLoad();
+        } else {
+            for (var x = 0; x < agenda.length; x++) {
+                agenda[x].ocultar = false;
+            }
+
+            this.carregarEventosDoMes(agenda);
+        }
+    }
+
+
 
     render() {
         const { state } = this;
@@ -149,7 +215,9 @@ class Agenda extends Component {
                 <AgendaDetalhe />
                 <div className="load" style={{ display: (state.aguardar ? 'block' : 'none') }} ><i className="fa fa-cog fa-spin fa-3x fa-fw"></i>Aguarde...</div>
                 <div style={{ display: (state.aguardar ? 'none' : 'block') }}>
+
                     <Container fluid="true">
+                        <LancamentoSearch pesquisarPorData={false} />
                         <Row>
                             <Col md="12">
                                 <FullCalendar
@@ -159,7 +227,7 @@ class Agenda extends Component {
                                     events={state.events}
                                     locale="pt-BR"
                                     header={{ left: 'btnMesAnterior, btnProximoMes', center: 'title', right: '' }}
-                                    buttonText={{'today':'Hoje'}}
+                                    buttonText={{ 'today': 'Hoje' }}
                                     customButtons={{
                                         btnProximoMes: {
                                             'text': 'Próximo mês >>',

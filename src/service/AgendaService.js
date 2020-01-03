@@ -8,5 +8,8 @@ export const AgendaService = {
             return ApiService.get(endpoint + '/' + mes + ',' + ano);
         }
         return ApiService.get(endpoint);
-    }
+    },
+    pesquisar(filtro){
+        return ApiService.post(endpoint + '/pesquisar',filtro);
+    },
 }
