@@ -14,6 +14,7 @@ import Table from 'react-bootstrap/Table'
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 import Tooltip from 'react-bootstrap/Tooltip'
 import { CategoriaService } from '../../service/CategoriaService'
+import CategoriaForm from '../ManterCategoria/CategoriaForm'
 
 
 class LancamentoForm extends Component {
@@ -39,6 +40,8 @@ class LancamentoForm extends Component {
         this.excluirCategoria = this.excluirCategoria.bind(this);
         this.editarCategoria = this.editarCategoria.bind(this);
         this.obterTotal = this.obterTotal.bind(this);
+        this.cadastrarCategoria = this.cadastrarCategoria.bind(this);
+        this.marcarCategoriaAposCadastro = this.marcarCategoriaAposCadastro.bind(this);
 
 
         this.dropDownCategorias = React.createRef();
@@ -142,7 +145,7 @@ class LancamentoForm extends Component {
                 });
             }
 
-            if(!this.state.rateioCategorias)
+            if (!this.state.rateioCategorias)
                 this.carregarCategorias(lancamento.tipo);
             else
                 this.carregarCategorias("AMBOS");
@@ -195,6 +198,24 @@ class LancamentoForm extends Component {
             }
         }
         this.setState({ aguardarCadastro: true });
+
+        if(!this.state.rateioCategorias && this.state.categoriaSelecionadaId > 0){
+            alert(JSON.stringify(this.state.categorias));
+            var index = this.state.categorias.findIndex(c => c.id == this.state.categoriaSelecionadaId);
+            //if (lancamento.lancamentoCategorias != null && lancamento.lancamentoCategorias.length > 0) {
+                lancamento.lancamentoCategorias = new Array();
+            //}
+            if (index >= 0) {
+                var categoria = this.state.categorias[index];
+                var lctoCategoria = {
+                    lancamentoId: 0,
+                    categoriaId: categoria.id,
+                    valor: parseFloat(this.state.valorEntrada.replace(',', '.')),
+                    tipo: categoria.tipo
+                }
+                lancamento.lancamentoCategorias.push(lctoCategoria);
+            }
+        }
 
         if (lancamento.id === 0) {
             const resposta = await LancamentoService.create(this.state.lancamento);
@@ -378,7 +399,8 @@ class LancamentoForm extends Component {
             faturaCartaoId: 0,
             pessoaId: 0,
             qtdParcelas: 1,
-            parcelamentoFixo: false
+            parcelamentoFixo: false,
+            lancamentoCategorias: []
         }
         this.setState({
             lancamento: lcto,
@@ -461,7 +483,7 @@ class LancamentoForm extends Component {
 
     }
 
-    obterTotal(){
+    obterTotal() {
         const { state } = this;
         var total = 0;
 
@@ -470,14 +492,30 @@ class LancamentoForm extends Component {
         return total;
     }
 
+    cadastrarCategoria() {
+        Channel.emit("categoria:new", 0);
+    }
+
+    marcarCategoriaAposCadastro(id) {
+        if (!this.state.rateioCategorias) {
+            this.carregarCategorias(this.state.lancamento.tipo);
+            this.setState({ categoriaSelecionadaId: id });
+        }
+        else {
+            this.carregarCategorias("AMBOS");
+            this.setState({ categoriaRateioId: id });
+        }
+    }
+
 
     render() {
         const { state } = this;
         return (
             <div>
+                <CategoriaForm getIdCategoria={this.marcarCategoriaAposCadastro} />
                 <ModalAlert mensagem={state.mensagem} erro={state.erro} alerta={state.alerta} sucesso={state.sucesso} exibirModal={state.excluir || state.erro || state.sucesso} onCancel={this.onCloseModal} />
                 <Button variant="primary" className="mt-2" onClick={this.handleShow} style={{ display: this.props.habilitarNovoLcto ? 'block' : 'none' }}>Novo Lançamento</Button>
-                <Modal show={this.state.show} onHide={this.handleClose} size="lg">
+                <Modal show={this.state.show} onHide={this.handleClose} size="xl">
                     <Modal.Header closeButton>
                         <Modal.Title>{state.lancamento.id > 0 ? 'Editar lançamento (' + state.lancamento.id + ')' : 'Novo lançamento'}</Modal.Title>
                     </Modal.Header>
@@ -596,7 +634,7 @@ class LancamentoForm extends Component {
                                                 </Form.Group>
                                             </Col>
                                         </Form.Row>
-                                        <Form.Row className={state.rateioCategorias ? 'd-none' : 'd-block mt-2'}>
+                                        <Form.Row className={state.rateioCategorias ? 'd-none' : 'mt-2'}>
                                             <Col>
                                                 <Form.Group controlId="categoriaId">
                                                     <Form.Label>Categoria</Form.Label>
@@ -609,6 +647,7 @@ class LancamentoForm extends Component {
                                                             )
                                                         }
                                                     </Form.Control>
+                                                    <a href="javascript:void(0)" style={{ top: '-3px' }} className="badge badge-primary" onClick={this.cadastrarCategoria}>Criar nova categoria</a>
                                                 </Form.Group>
                                             </Col>
                                         </Form.Row>
@@ -622,7 +661,7 @@ class LancamentoForm extends Component {
                                         </Form.Row>
                                     </Form>
                                 </Col>
-                                <Col md={4} className="border-left" className={!state.rateioCategorias ? 'd-none' : 'd-block'}>
+                                <Col md={4} className="border-left" className={!state.rateioCategorias ? 'd-none' : ''}>
                                     <Form style={{ display: state.lancamento.id === 0 || state.lancamento.podeAlterar ? '' : 'none' }}>
                                         <Form.Row>
                                             <Col>
@@ -636,6 +675,7 @@ class LancamentoForm extends Component {
                                                             )
                                                         }
                                                     </Form.Control>
+                                                    <a href="javascript:void(0)" style={{ top: '-3px' }} className="badge badge-primary" onClick={this.cadastrarCategoria}>Criar nova categoria</a>
                                                 </Form.Group>
                                             </Col>
                                         </Form.Row>
@@ -689,7 +729,7 @@ class LancamentoForm extends Component {
                                             }
 
                                         </tbody>
-                                        <tfoot className="font-weight-bold" style={{display: state.categoriasRateio.length > 1 ? '' : 'none'}}>
+                                        <tfoot className="font-weight-bold" style={{ display: state.categoriasRateio.length > 1 ? '' : 'none' }}>
                                             <tr>
                                                 <td>Total:</td>
                                                 <td colSpan="2">
