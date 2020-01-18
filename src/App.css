@@ -1,6 +1,7 @@
 .material-icons.md-10 { font-size: 10px; }
 .material-icons.md-12 { font-size: 12px; }
 .material-icons.md-18 { font-size: 18px; }
+.material-icons.md-22 { font-size: 22px; }
 .material-icons.md-24 { font-size: 24px; }
 .material-icons.md-36 { font-size: 36px; margin: 0px 5px; }
 .material-icons.md-48 { font-size: 48px; }
@@ -19,6 +20,23 @@
     left: 45%;
     color: black;
 }
+.load-10{
+    width: 10px;
+    height: 10px;
+    color: black; 
+}
 .evento{
     cursor: pointer;
+}
+a.hover-conteudo:hover{
+    background-color: white;
+    color: black !important;
+}
+
+.bg-success{
+    background-color: rgba(1, 70, 17, 1.6) !important;
+}
+
+.bg-info{
+    background-color: rgba(70, 105, 111, 1) !important;
 }

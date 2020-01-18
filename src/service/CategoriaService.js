@@ -13,7 +13,9 @@ export const CategoriaService = {
         return ApiService.get(endpoint + "/" + id);
     },
     create(categoria){
-        console.log(JSON.stringify(categoria));
         return ApiService.post(endpoint + '/salvar',categoria);
+    },
+    listAtivas(){
+        return ApiService.get(endpoint + '/ativas');
     }
 }

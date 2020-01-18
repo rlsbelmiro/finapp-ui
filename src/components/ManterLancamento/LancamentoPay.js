@@ -157,7 +157,7 @@ class LancamentoPay extends Component {
             <div>
                 <ModalAlert mensagem={state.mensagem} erro={state.erro} alerta={state.alerta} sucesso={state.sucesso} exibirModal={state.excluir || state.erro || state.sucesso} onCancel={this.onCloseModal} />
                 <Modal show={this.state.show} onHide={this.handleClose} size="lg">
-                    <Modal.Header closeButton>
+                    <Modal.Header closeButton className="bg-success text-white">
                         <Modal.Title>{ (state.lancamento.tipo === 'DEBITO' ? 'Pagar' : 'Receber' ) + ' lançamento (' + state.lancamento.id + ')'}</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>

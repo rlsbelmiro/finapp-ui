@@ -6,14 +6,14 @@ class MenuPrincipal extends Component {
 
     render() {
         return (
-            <Navbar bg="dark" variant="dark" expand="lg">
+            <Navbar bg="success" variant="dark" expand="lg" className="shadow">
                 <Navbar.Brand href="#home">FinApp - Finanças</Navbar.Brand>
                 <Navbar.Toggle aria-controls="menuConteudo" />
                 <Navbar.Collapse id="menuConteudo">
                     <Nav className="mr-auto">
-                        <Nav.Link href="#home">Vendas</Nav.Link>
-                        <Nav.Link href="#home">Financeiro</Nav.Link>
-                        <Nav.Link href="#home">Cadastros</Nav.Link>
+                        <Nav.Link className="nav-link text-white border-right hover-conteudo" href="#home">Vendas</Nav.Link>
+                        <Nav.Link className="nav-link text-white border-right hover-conteudo" href="#home">Financeiro</Nav.Link>
+                        <Nav.Link className="nav-link text-white border-right hover-conteudo" href="#home">Cadastros</Nav.Link>
                     </Nav>
                 </Navbar.Collapse>
                 <div>

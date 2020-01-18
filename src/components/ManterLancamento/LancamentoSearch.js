@@ -264,15 +264,15 @@ class LancamentoSearch extends Component {
                     </Modal.Footer>
                 </Modal>
                 <Row>
-                    <Col md="1" className="text-center text-white p-2 bg-info">
+                    <Col md="1" className="text-center text-success p-2 bg-light border rounded-lg border-success ">
                         <i className="material-icons md-24 mt-2d">search</i>
                         <label className="h6 align-top mt-2">Filtrar</label>
                     </Col>
-                    <Col md="11" className="text-center p-2 bg-secondary">
+                    <Col md="11" className="text-center p-2 bg-ligth border-2 border-bottom border-success">
                         <ButtonToolbar>
                             <ButtonGroup className="mr-2" size="" >
                                 <Dropdown id="pesquisa_tipo" className="mr-1">
-                                    <Dropdown.Toggle variant="primary">
+                                    <Dropdown.Toggle variant="success">
                                         Tipo: {this.getDescricaoTipo(state.filtroSelecionado.tipo)}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
@@ -287,7 +287,7 @@ class LancamentoSearch extends Component {
                                 </Dropdown>
 
                                 <Dropdown id="pesquisa_periodo" className="mr-1" style={{display: this.props.pesquisarPorData ? '' : 'none'}}>
-                                    <Dropdown.Toggle variant="primary">
+                                    <Dropdown.Toggle variant="success">
                                         <i className="material-icons md-18 mr-2">date_range</i>
                                         {state.filtroSelecionado.data === "SELECIONARDATAS" ? state.filtroSelecionado.periodoInicio + ' à ' + state.filtroSelecionado.periodoFim : this.getDescricaoTipoData(state.filtroSelecionado.data)}
                                     </Dropdown.Toggle>
@@ -303,7 +303,7 @@ class LancamentoSearch extends Component {
                                 </Dropdown>
 
                                 <Dropdown id="pesquisa_status" className="mr-1">
-                                    <Dropdown.Toggle variant="primary">
+                                    <Dropdown.Toggle variant="success">
                                         Situação: {this.getDescricaoSituacao(state.filtroSelecionado.situacao)}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
@@ -318,7 +318,7 @@ class LancamentoSearch extends Component {
                                 </Dropdown>
 
                                 <Dropdown id="pesquisa_status" className="mr-1">
-                                    <Dropdown.Toggle variant="primary">
+                                    <Dropdown.Toggle variant="success">
                                         Carteira: {state.filtroSelecionado.carteira.descricao}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
@@ -333,7 +333,7 @@ class LancamentoSearch extends Component {
                                 </Dropdown>
 
                                 <Dropdown id="pesquisa_status" className="mr-2">
-                                    <Dropdown.Toggle variant="primary">
+                                    <Dropdown.Toggle variant="success">
                                         Cartão: {state.filtroSelecionado.cartao.descricao}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
@@ -346,7 +346,7 @@ class LancamentoSearch extends Component {
                                         <Dropdown.Item onClick={() => this.handleChange('cartao', {})}>Todos</Dropdown.Item>
                                     </Dropdown.Menu>
                                 </Dropdown>
-                                <Button variant="primary" onClick={this.handleSubmit}>Pesquisar</Button>
+                                <Button variant="success" onClick={this.handleSubmit}>Pesquisar</Button>
                                 <Button variant="danger" onClick={this.handleLimparForm}>Limpar</Button>
                             </ButtonGroup>
                         </ButtonToolbar>

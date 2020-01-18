@@ -53,24 +53,25 @@ class ModalAlert extends Component {
         const styleWarning = {display: props.alerta ? 'inline' : 'none'};
         const styleSuccess = {display: props.sucesso ? 'inline' : 'none'};
         const clsText = props.erro ? 'text-danger' : props.alerta ? 'text-warning' : props.sucesso ? 'text-success' : '';
+        const clsBg = props.erro ? 'bg-danger' : props.alerta ? 'bg-warning' : props.sucesso ? 'bg-success' : '';
         return (
             <div id="modalAlert">
                 <Modal show={this.state.show} onHide={this.handleClose} size="md">
-                    <Modal.Header closeButton>
+                    <Modal.Header closeButton className={clsBg}>
                         <Modal.Title>
-                            <i style={styleError} className="material-icons text-danger md-24 mr-3">error</i>
-                            <span style={styleError} className="h3 align-top text-danger">Erro</span>
+                            <i style={styleError} className="material-icons text-white md-24 mr-3">error</i>
+                            <span style={styleError} className="h3 align-top text-white">Erro</span>
 
 
-                            <i style={styleWarning} className="material-icons text-warning md-24 mr-3">warning</i>
-                            <span style={styleWarning} className="h3 align-top text-warning">Alerta</span>
+                            <i style={styleWarning} className="material-icons text-white md-24 mr-3">warning</i>
+                            <span style={styleWarning} className="h3 align-top text-white">Alerta</span>
 
-                            <i style={styleSuccess} className="material-icons text-success md-24 mr-3">check_circle</i>
-                            <span style={styleSuccess} className="h3 align-top text-success">Sucesso</span>
+                            <i style={styleSuccess} className="material-icons text-white md-24 mr-3">check_circle</i>
+                            <span style={styleSuccess} className="h3 align-top text-white">Sucesso</span>
                     </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <label className={clsText}>{props.mensagem} {props.id}</label>
+                        <p className="h5">{props.mensagem} {props.id}</p>
                     </Modal.Body>
                     <Modal.Footer>
                         <Button style={styleWarning} variant="danger" onClick={this.handleClose}>Cancelar</Button>

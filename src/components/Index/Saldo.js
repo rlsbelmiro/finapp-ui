@@ -5,6 +5,9 @@ import { CaixaService } from '../../service/CaixaService';
 import { Channel } from '../../service/EventService';
 
 class Saldo extends Component {
+    static defaultProps = {
+        exibir: true
+    }
     constructor(props){
         super(props);
 
@@ -38,12 +41,9 @@ class Saldo extends Component {
     render() {
         const { state } = this;
         return (
-            <div>
-                <Row className="border-bottom">
-                    <Col md="12" className="text-center"><label className="font-weight-bold align-center mt-1 h5 text-truncate text-white" style={{maxWidth: "200px"}}>RLSoft Ltda</label></Col>
-                </Row>
-                <Row className="pt-3 bg-dark border-bottom">
-                    <Col md="12" className={state.saldo < 0 ? 'text-center h3 text-danger bg-dark mt-2 rounded' : 'text-center h3 text-success bg-dark mt-2 rounded'}>
+            <div style={{display: this.props.exibir ? '' : 'none'}}>
+                <Row className="shadow pt-3 bg-info border-bottom">
+                    <Col md="12" className={state.saldo < 0 ? 'text-center h3 text-danger mt-2 rounded' : 'text-center h3 text-white mt-2 rounded'}>
 
                         <i className="material-icons md-36">account_balance</i>
                         <label className="h3 align-top ">
@@ -57,8 +57,8 @@ class Saldo extends Component {
 
                     </Col>
                 </Row>
-                <Row className="pt-2 bg-dark rounded">
-                    <Col md="6" sm="12" xs="6" className="text-center text-success border-right">
+                <Row className="shadow pt-2 bg-info rounded">
+                    <Col md="6" sm="12" xs="6" className="text-center text-white border-right">
 
                         <i className="material-icons md-18">call_made</i>
                         <label className="h6 ">
@@ -71,7 +71,7 @@ class Saldo extends Component {
                         </label>
 
                     </Col>
-                    <Col md="6" sm="12" xs="6" className="text-center text-danger">
+                    <Col md="6" sm="12" xs="6" className="text-center text-white">
 
                         <i className="material-icons md-18">call_received</i>
                         <label className="h6">
@@ -79,7 +79,7 @@ class Saldo extends Component {
                                 new Intl.NumberFormat('pt-BR', {
                                     style: 'currency',
                                     currency: 'BRL'
-                                }).format(state.totalDespesas)
+                                }).format(state.totalDespesas * -1)
                             }
                         </label>
 

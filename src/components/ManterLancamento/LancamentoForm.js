@@ -514,9 +514,9 @@ class LancamentoForm extends Component {
             <div>
                 <CategoriaForm getIdCategoria={this.marcarCategoriaAposCadastro} />
                 <ModalAlert mensagem={state.mensagem} erro={state.erro} alerta={state.alerta} sucesso={state.sucesso} exibirModal={state.excluir || state.erro || state.sucesso} onCancel={this.onCloseModal} />
-                <Button variant="primary" className="mt-2" onClick={this.handleShow} style={{ display: this.props.habilitarNovoLcto ? 'block' : 'none' }}>Novo Lançamento</Button>
+                <Button variant="success" className="mt-2" onClick={this.handleShow} style={{ display: this.props.habilitarNovoLcto ? 'block' : 'none' }}>Novo Lançamento</Button>
                 <Modal show={this.state.show} onHide={this.handleClose} size="xl">
-                    <Modal.Header closeButton>
+                    <Modal.Header closeButton className="bg-success text-white">
                         <Modal.Title>{state.lancamento.id > 0 ? 'Editar lançamento (' + state.lancamento.id + ')' : 'Novo lançamento'}</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>

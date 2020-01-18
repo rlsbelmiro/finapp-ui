@@ -8,30 +8,18 @@ import MenuConteudo from './components/Index/MenuConteudo';
 import Saldo from './components/Index/Saldo';
 import Lancamento from './components/ManterLancamento/Lancamento';
 import Agenda from './components/ManterAgenda/Agenda';
-import { Switch, Route } from 'react-router-dom';
+import { Switch, Route, Link } from 'react-router-dom';
 
 
 import './style.scss';
+import FluxoCaixa from './components/ManterFluxoCaixa/FluxoCaixa';
+import ConteudoFinannceiro from './components/Index/ConteudoFinanceiro';
 
 function App() {
   return (
     <div className="App">
       <MenuPrincipal />
-      <Container fluid="true">
-        <Row>
-          <Col md="2" className="border bg-secondary"> 
-            <Saldo />
-          </Col>
-          <Col md="10" className="pl-0 pr-0 bg-light pb-4">
-            <MenuConteudo />
-
-            <Switch>
-              <Route path="/lancamentos" component={Lancamento} ></Route>
-              <Route path="/agenda" component={Agenda} ></Route>
-            </Switch>
-          </Col>
-        </Row>
-      </Container>
+      <ConteudoFinannceiro />
     </div>
   );
 }
