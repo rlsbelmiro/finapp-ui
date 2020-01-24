@@ -9,6 +9,8 @@ export function getPeriodosFluxoCaixa(qtd) {
 
     for(var x = 1; x <= qtd; x++){
         periodos.push({
+            saldoAnterior: 0,
+            fluxoCaixa: 0,
             periodoInicio: Intl.DateTimeFormat("pt-BR").format(periodoInicio),
             periodoFim: Intl.DateTimeFormat("pt-BR").format(periodoFim),
             label: getNomePeriodo(periodoInicio.getMonth(),periodoInicio.getFullYear())
@@ -36,40 +38,40 @@ export function formatarDataBR(dataString){
 }
 
 function getNomePeriodo(value,ano){
-    var retorno = "Janeiro " + ano;
+    var retorno = "JAN " + ano;
     switch (value) {
         case 1:
-            retorno = "Fevereiro " + ano;
+            retorno = "FEV " + ano;
             break;
         case 2:
-            retorno = "Março " + ano;
+            retorno = "MAR " + ano;
             break;
         case 3:
-            retorno = "Abril " + ano;
+            retorno = "ABR " + ano;
             break;
         case 4:
-            retorno = "Maio " + ano;
+            retorno = "MAI " + ano;
             break;
         case 5:
-            retorno = "Junho " + ano;
+            retorno = "JUN " + ano;
             break;
         case 6:
-            retorno = "Julho " + ano;
+            retorno = "JUL " + ano;
             break;
         case 7:
-            retorno = "Agosto " + ano;
+            retorno = "AGO " + ano;
             break;
         case 8:
-            retorno = "Setembro " + ano;
+            retorno = "SET " + ano;
             break;
         case 9:
-            retorno = "Outubro " + ano;
+            retorno = "OUT " + ano;
             break;
         case 10:
-            retorno = "Novembro " + ano;
+            retorno = "NOV " + ano;
             break;
         case 11:
-            retorno = "Dezembro " + ano;
+            retorno = "DEZ " + ano;
             break;
     }
 
@@ -82,7 +84,6 @@ function getUltimoDiaMes(mes) {
         case 0:
         case 2:
         case 4:
-        case 5:
         case 6:
         case 7:
         case 9:
@@ -90,6 +91,7 @@ function getUltimoDiaMes(mes) {
             dia = 31;
             break;
         case 3:
+        case 5:
         case 8:
         case 10:
             dia = 30;

@@ -40,3 +40,16 @@ a.hover-conteudo:hover{
 .bg-info{
     background-color: rgba(70, 105, 111, 1) !important;
 }
+
+.nav-tabs .nav-link {
+    border: 1px solid transparent !important;
+    border-top-left-radius: .25rem !important;
+    border-top-right-radius: .25rem !important;
+}
+
+.nav-tabs .nav-item.show .nav-link, .nav-link.active {
+    color: #f8f9fa !important;
+    background-color: #014611 !important;
+    border-color: #dee2e6 #dee2e6 #fff !important;
+    font-size: 20px !important;
+}
