@@ -3,6 +3,8 @@ import { Container, Table } from 'react-bootstrap';
 import * as date from '../../utils/date.js';
 import { FluxoCaixaService } from '../../service/FluxoCaixaService.js';
 import { CaixaService } from '../../service/CaixaService.js';
+import { Channel } from '../../service/EventService';
+import AgendaDetalhe from '../ManterAgenda/AgendaDetalhe';
 
 class FluxoCaixaCarteira extends Component {
     static defaultProps = {
@@ -14,6 +16,7 @@ class FluxoCaixaCarteira extends Component {
 
         this.onLoad = this.onLoad.bind(this);
         this.obterPeriodosPorTipo = this.obterPeriodosPorTipo.bind(this);
+        this.carregarDetalhesLancamento = this.carregarDetalhesLancamento.bind(this);
 
         this.state = {
             fluxo: {
@@ -61,6 +64,18 @@ class FluxoCaixaCarteira extends Component {
 
     componentDidMount() {
         this.onLoad();
+    }
+
+    carregarDetalhesLancamento(categoria,periodo) {
+
+        var ag = {
+            periodoInicio: periodo.periodoInicio,
+            periodoFim: periodo.periodoFim,
+            tipo: periodo.valor < 0 ? 'DEBITO' : 'CREDITO',
+            valor: periodo.valor
+        }
+
+        Channel.emit('agendaDetalhe:view', ag);
     }
 
     async onLoad() {
@@ -209,12 +224,12 @@ class FluxoCaixaCarteira extends Component {
                         </thead>
                         <tbody>
                             {
-                                state.fluxo.registros.map(function (c, index) {
+                                state.fluxo.registros.map(c => {
                                     return (
-                                        c.lancamentos.map(function (l, iLancamento) {
+                                        c.lancamentos.map((l,i) => {
                                             return (
                                                 <>
-                                                    <tr key={"carateira-" + index} className="bg-info text-white" style={{ display: iLancamento == 0 ? '' : 'none' }}>
+                                                    <tr key={"carateira-" + i} style={{display: i == 0 ? '' : 'none'}} className="bg-info text-white">
                                                         <td>{c.nome}</td>
                                                         {
                                                             l.periodos.map(function (p, i) {
@@ -225,13 +240,13 @@ class FluxoCaixaCarteira extends Component {
                                                             })
                                                         }
                                                     </tr>
-                                                    <tr style={{ display: iLancamento == 0 ? '' : 'none' }}>
+                                                    <tr style={{display: i == 0 ? '' : 'none'}}>
                                                         <th>SALDO ANTERIOR</th>
                                                         {
-                                                            state.periodos.map(function (p, iPeriodo) {
+                                                            state.periodos.map((p,iP) => {
                                                                 return (
-                                                                    <td key={"periodoI-" + iPeriodo}>
-                                                                        <label style={{ display: p.saldoAnterior == 0 ? 'none' : '' }} >{
+                                                                    <td key={"periodoI-" + iP} >
+                                                                        <label  style={{ display: p.saldoAnterior == 0 ? 'none' : '' }} >{
                                                                             new Intl.NumberFormat('pt-BR', {
                                                                                 style: 'currency',
                                                                                 currency: 'BRL'
@@ -243,13 +258,13 @@ class FluxoCaixaCarteira extends Component {
                                                             })
                                                         }
                                                     </tr>
-                                                    <tr key={"carteiraP-" + iLancamento} className={l.tipo === "DEBITO" ? 'text-danger' : 'text-success'}>
+                                                    <tr key={"carteiraP-"} className={l.tipo === "DEBITO" ? 'text-danger' : 'text-success'}>
                                                         <td>{l.tipo === "DEBITO" ? "SAÍDAS" : "ENTRADAS"}</td>
                                                         {
-                                                            l.periodos.map(function (p, iPeriodo) {
+                                                            l.periodos.map(p => {
                                                                 return (
-                                                                    <td key={"periodoT-" + iPeriodo}>
-                                                                        <label style={{ display: p.valor == 0 ? 'none' : '' }} >{
+                                                                    <td key={"periodoT-"}>
+                                                                        <label className="FluxoCaixaLabel" onClick={() => this.carregarDetalhesLancamento(c,p)} style={{ display: p.valor == 0 ? 'none' : '' }} >{
                                                                             new Intl.NumberFormat('pt-BR', {
                                                                                 style: 'currency',
                                                                                 currency: 'BRL'
@@ -261,7 +276,7 @@ class FluxoCaixaCarteira extends Component {
                                                             })
                                                         }
                                                     </tr>
-                                                    <tr style={{ display: iLancamento > 0 ? '' : 'none' }}>
+                                                    <tr style={{display: i == 0 ? 'none' : ''}}>
                                                         <th>SALDO FINAL</th>
                                                         {
                                                             state.periodos.map(function (p, iPeriodo) {
@@ -279,7 +294,7 @@ class FluxoCaixaCarteira extends Component {
                                                             })
                                                         }
                                                     </tr>
-                                                    <tr style={{ display: iLancamento > 0 ? '' : 'none' }} >
+                                                    <tr>
                                                         <td colSpan={l.periodos.length + 1} style={{ border: '4px solid #999', padding: '1px' }}></td>
                                                     </tr>
                                                 </>

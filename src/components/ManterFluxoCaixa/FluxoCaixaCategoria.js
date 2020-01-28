@@ -4,7 +4,8 @@ import { CategoriaService } from '../../service/CategoriaService';
 import { FluxoCaixaService } from '../../service/FluxoCaixaService';
 import { CaixaService } from '../../service/CaixaService';
 import * as date from '../../utils/date.js';
-
+import { Channel } from '../../service/EventService';
+import AgendaDetalhe from '../ManterAgenda/AgendaDetalhe';
 
 class FluxoCaixaCategoria extends Component {
     static defaultProps = {
@@ -15,6 +16,8 @@ class FluxoCaixaCategoria extends Component {
         super(props);
 
         this.onLoad = this.onLoad.bind(this);
+        this.carregarDetalhesLancamento = this.carregarDetalhesLancamento.bind(this);
+        this.exibirEsconder = this.exibirEsconder.bind(this);
 
         this.state = {
             fluxo: [
@@ -25,6 +28,7 @@ class FluxoCaixaCategoria extends Component {
                         id: 0,
                         nome: '',
                         analitico: false,
+                        exibir: true,
                         valor: 0,
                         categoriaSuperiorId: 0,
                         calculada: false,
@@ -64,8 +68,26 @@ class FluxoCaixaCategoria extends Component {
     }
 
     componentDidMount() {
-        this.onLoad()
-    };
+        this.onLoad();
+    }
+
+    carregarDetalhesLancamento(categoria, periodo) {
+        if (categoria.analitico) {
+            var ag = {
+                periodoInicio: periodo.periodoInicio,
+                periodoFim: periodo.periodoFim,
+                tipo: periodo.valor < 0 ? 'DEBITO' : 'CREDITO',
+                valor: periodo.valor,
+                categorias: [{
+                    id: categoria.id
+                }]
+            }
+
+            Channel.emit('agendaDetalhe:view', ag);
+        } else {
+            alert('Somente é possível consultar categorias analíticas');
+        }
+    }
 
     async onLoad() {
         let { filtro } = this.state;
@@ -98,6 +120,8 @@ class FluxoCaixaCategoria extends Component {
                             id: f.categoria.id,
                             nome: f.categoria.numeracao + ' ' + f.categoria.nome.toString().toUpperCase(),
                             analitico: f.categoria.analitico,
+                            exibir: true,
+                            iconeEsconder: true,
                             categoriaSuperiorId: f.categoria.categoriaSuperiorId,
                             calculada: f.categoria.analitico,
                             data: f.data,
@@ -169,13 +193,13 @@ class FluxoCaixaCategoria extends Component {
                         var categoriaPrincipal = fl[0].periodos[x].valor;
                         periodos[x].fluxoCaixa = vlSaldoAnterior + categoriaPrincipal;
                     } else {
-                        periodos[x].saldoAnterior = periodos[x-1].fluxoCaixa;
+                        periodos[x].saldoAnterior = periodos[x - 1].fluxoCaixa;
                         var categoriaPrincipal = fl[0].periodos[x].valor;
                         periodos[x].fluxoCaixa = periodos[x].saldoAnterior + categoriaPrincipal;
                     }
                 }
 
-                
+
 
                 var fluxo = new Array();
                 fluxo.push({
@@ -194,11 +218,33 @@ class FluxoCaixaCategoria extends Component {
         }
     }
 
+    exibirEsconder(c){
+        /*const { state } = this;
+
+        state.fluxo[0].registros.filter(x => x.categoriaSuperiorId == c.id).forEach(f => {
+            f.exibir = !f.exibir;
+            if(!f.analiico){
+                state.fluxo[0].registros.filter(o => o.categoriaSuperiorId == f.id).forEach(f1 => {
+                    f1.exibir = f.exibir
+                });
+            }
+        });
+
+        state.fluxo[0].registros.filter(x => x.id == c.id).forEach(f => {
+            f.iconeEsconder = !f.iconeEsconder;
+        });
+
+        this.setState({fluxo: state.fluxo});*/
+    }
+
+
+
     render() {
         const { state, props } = this;
         return (
-            <div id="manterFluxoCaixa" style={{display: props.exibir ? '' : 'none' }}>
+            <div id="manterFluxoCaixa" style={{ display: props.exibir ? '' : 'none' }}>
                 <div className="load" style={{ display: (state.aguardar ? '' : 'none') }} ><i className="fa fa-cog fa-spin fa-3x fa-fw"></i>Aguarde...</div>
+                <AgendaDetalhe />
                 <Container fluid="true" style={{ display: (!state.aguardar ? '' : 'none') }}>
                     <Table striped bordered hover size="sm" className="mt-2">
                         <thead>
@@ -235,21 +281,23 @@ class FluxoCaixaCategoria extends Component {
                                 }
                             </tr>
                             {
-                                state.fluxo[0].registros.map(function (c, index) {
+                                state.fluxo[0].registros.map(c => {
                                     return (
-                                        <tr key={"categoria-" + index}>
-                                            <td className={c.analitico ? '' : 'font-weight-bold'}>{c.nome}</td>
+                                        <tr key={"categoria-"} style={{display: c.exibir ? '' : 'none'}}>
+                                            <td className={c.analitico ? '' : 'font-weight-bold'} >
+                                                {c.nome}
+                                            </td>
                                             {
-                                                c.periodos.map(function (p, i) {
+                                                c.periodos.map(p => {
                                                     return (
                                                         <td className={(c.analitico ? '' : 'font-weight-bold') + ' ' + (p.valor < 0 ? 'text-danger' : p.valor == 0 ? '' : 'text-success')}>
-                                                            <label style={{display: p.valor == 0 ? 'none' : ''}} >{
+                                                            <label className="FluxoCaixaLabel" onClick={() => this.carregarDetalhesLancamento(c, p)} style={{ display: p.valor == 0 ? 'none' : '' }} >{
                                                                 new Intl.NumberFormat('pt-BR', {
                                                                     style: 'currency',
                                                                     currency: 'BRL'
                                                                 }).format(p.valor)
                                                             }</label>
-                                                            <label style={{display: p.valor != 0 ? 'none' : ''}}>--</label>
+                                                            <label style={{ display: p.valor != 0 ? 'none' : '' }}>--</label>
                                                         </td>
                                                     )
                                                 })

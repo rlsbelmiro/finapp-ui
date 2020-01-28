@@ -54,10 +54,13 @@ class AgendaDetalhe extends Component {
     onLoad(obj) {
         var flt = this.state.filtro;
         flt.tipo = obj.tipo;
-        var dataIni = obj.dataVencimento.split('/');
-        var dataFim = obj.dataVencimento.split('/');
+        var dataIni = obj.periodoInicio ? obj.periodoInicio.split('/') : obj.dataVencimento.split('/');
+        var dataFim = obj.periodoFim ? obj.periodoFim.split('/') : obj.dataVencimento.split('/');
         flt.periodoInicio = dataIni[2] + '-' + dataIni[1] + '-' + dataIni[0];
         flt.periodoFim = dataFim[2] + '-' + dataFim[1] + '-' + dataFim[0];
+        if(obj.categorias){
+            flt.categorias = obj.categorias;
+        }
         this.setState({ show: true, filtro: flt, valor: obj.valor, dia: obj.dataVencimento });
     }
 
@@ -69,7 +72,7 @@ class AgendaDetalhe extends Component {
         const { state } = this;
         return (
             <Modal show={this.state.show} onHide={this.handleClose} size="lg">
-                <Modal.Header closeButton>
+                <Modal.Header className={state.filtro.tipo === "DEBITO" ? "bg-danger text-white" : "bg-success text-white"} closeButton>
                     <Modal.Title>
                         Lançamentos de {state.filtro.tipo} do dia {state.dia} <br />
                         Valor Total: 
