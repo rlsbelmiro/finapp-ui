@@ -17,6 +17,9 @@ import { CategoriaService } from '../../service/CategoriaService'
 import CategoriaForm from '../ManterCategoria/CategoriaForm'
 
 
+import * as date from '../../utils/date';
+
+
 class LancamentoForm extends Component {
     static defaultProps = {
         lancamentoEdit: {},
@@ -117,8 +120,10 @@ class LancamentoForm extends Component {
         if (id > 0) {
             const lcto = await LancamentoService.get(id);
             lancamento = lcto.objeto;
-            lancamento.dataCompetencia = lancamento.dataCompetenciaFormatada;
-            lancamento.dataVencimento = lancamento.dataVencimentoFormatada;
+            lancamento.dataCompetencia = date.formatarDataIngles(lancamento.dataCompetenciaFormatada);
+            lancamento.dataCompetenciaFormatada = lancamento.dataCompetencia;
+            lancamento.dataVencimento = date.formatarDataIngles(lancamento.dataVencimentoFormatada);
+            lancamento.dataVencimentoFormatada = lancamento.dataVencimento;
             var categoriaSelecionada = 0;
             if (lancamento.lancamentoCategorias != null && lancamento.lancamentoCategorias.length == 1) {
                 categoriaSelecionada = lancamento.lancamentoCategorias[0].categoriaId;
@@ -186,10 +191,8 @@ class LancamentoForm extends Component {
         var lancamento = this.state.lancamento;
 
         lancamento.valor = parseFloat(this.state.valorEntrada.replace(',', '.'));
-        var data1 = lancamento.dataCompetenciaFormatada.split('/');
-        var data2 = lancamento.dataVencimentoFormatada.split('/');
-        lancamento.dataCompetencia = data1[2] + '-' + data1[1] + '-' + data1[0] + 'T01:00:00';
-        lancamento.dataVencimento = data2[2] + '-' + data2[1] + '-' + data2[0] + 'T01:00:00';
+        lancamento.dataCompetencia = lancamento.dataCompetenciaFormatada + 'T01:00:00';
+        lancamento.dataVencimento = lancamento.dataVencimentoFormatada + 'T01:00:00';
         if (this.state.rateioCategorias) {
             lancamento.lancamentoCategorias = new Array();
             for (var x = 0; x < this.state.categoriasRateio.length; x++) {
@@ -200,7 +203,6 @@ class LancamentoForm extends Component {
         this.setState({ aguardarCadastro: true });
 
         if(!this.state.rateioCategorias && this.state.categoriaSelecionadaId > 0){
-            alert(JSON.stringify(this.state.categorias));
             var index = this.state.categorias.findIndex(c => c.id == this.state.categoriaSelecionadaId);
             //if (lancamento.lancamentoCategorias != null && lancamento.lancamentoCategorias.length > 0) {
                 lancamento.lancamentoCategorias = new Array();
@@ -267,20 +269,11 @@ class LancamentoForm extends Component {
                     lancamento.dataVencimentoFormatada = value;
                 }
 
-                if (lancamento.dataCompetenciaFormatada.length == 2 || lancamento.dataCompetenciaFormatada.length == 5) {
-                    lancamento.dataCompetenciaFormatada += '/';
-                }
-
-                if (lancamento.dataVencimentoFormatada.length == 2 || lancamento.dataVencimentoFormatada.length == 5) {
-                    lancamento.dataVencimentoFormatada += '/';
-                }
-
+               
                 break;
             case "dataVencimento":
                 lancamento.dataVencimentoFormatada = value;
-                if (lancamento.dataVencimentoFormatada.length == 2 || lancamento.dataVencimentoFormatada.length == 5) {
-                    lancamento.dataVencimentoFormatada += '/';
-                }
+                
                 break;
             case "valor":
                 this.state.valorEntrada = value;
@@ -577,7 +570,7 @@ class LancamentoForm extends Component {
                                                                 <i className="material-icons md-18 mr-2">date_range</i>
                                                             </InputGroup.Text>
                                                         </InputGroup.Prepend>
-                                                        <Form.Control required placeholder="__/__/____" aria-describedby="dataCompetencia" name="dataCompetencia" value={state.lancamento.dataCompetenciaFormatada} onChange={this.handleChange} />
+                                                        <Form.Control type="date" required placeholder="__/__/____" aria-describedby="dataCompetencia" name="dataCompetencia" value={state.lancamento.dataCompetenciaFormatada} onChange={this.handleChange} />
                                                     </InputGroup>
                                                 </Form.Group>
                                             </Col>
@@ -590,7 +583,7 @@ class LancamentoForm extends Component {
                                                                 <i className="material-icons md-18 mr-2">date_range</i>
                                                             </InputGroup.Text>
                                                         </InputGroup.Prepend>
-                                                        <Form.Control placeholder="__/__/____" aria-describedby="dataVencimento" name="dataVencimento" value={state.lancamento.dataVencimentoFormatada} onChange={this.handleChange} />
+                                                        <Form.Control type="date" placeholder="__/__/____" aria-describedby="dataVencimento" name="dataVencimento" value={state.lancamento.dataVencimentoFormatada} onChange={this.handleChange} />
                                                     </InputGroup>
                                                 </Form.Group>
                                             </Col>

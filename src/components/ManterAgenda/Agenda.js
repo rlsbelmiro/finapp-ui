@@ -226,7 +226,7 @@ class Agenda extends Component {
                                     plugins={[dayGridPlugin]}
                                     events={state.events}
                                     locale="pt-BR"
-                                    header={{ left: 'btnMesAnterior, btnProximoMes', center: 'title', right: '' }}
+                                    header={{ left: 'btnMesAnterior, btnProximoMes, btnAtualizar', center: 'title', right: '' }}
                                     buttonText={{ 'today': 'Hoje' }}
                                     customButtons={{
                                         btnProximoMes: {
@@ -236,6 +236,10 @@ class Agenda extends Component {
                                         btnMesAnterior: {
                                             'text': '<< Mês anterior',
                                             'click': () => this.carregarOutroMes(true)
+                                        },
+                                        btnAtualizar:{
+                                            'text': 'Atualizar',
+                                            'click': () => this.onLoad()
                                         }
                                     }}
                                     eventClick={this.carregarDetalhesEvento} />

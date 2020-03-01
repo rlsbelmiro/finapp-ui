@@ -8,7 +8,9 @@ import { CarteiraService } from '../../service/CarteiraService'
 import { CartaoDeCreditoService } from '../../service/CartaoDeCreditoService';
 import { LancamentoService } from '../../service/LancamentoService';
 import ModalAlert from '../Commons/ModalAlert';
-import { Channel } from '../../service/EventService'
+import { Channel } from '../../service/EventService';
+
+import * as date from '../../utils/date';
 
 
 class LancamentoPay extends Component {
@@ -75,7 +77,7 @@ class LancamentoPay extends Component {
         if (id > 0) {
             const lcto = await LancamentoService.get(id);
             lancamento = lcto.objeto;
-            lancamento.dataVencimento = lancamento.dataVencimentoFormatada;
+            lancamento.dataVencimento = date.formatarDataIngles(lancamento.dataVencimentoFormatada);
             this.setState({
                 valorEntrada: lancamento.valor.toString().replace('.', ','),
             })
@@ -104,10 +106,10 @@ class LancamentoPay extends Component {
         var lancamento = this.state.lancamento;
 
         lancamento.valor = parseFloat(this.state.valorEntrada.replace(',', '.'));
-        var data2 = lancamento.dataVencimento.split('/');
-        lancamento.dataVencimento = data2[2] + '-' + data2[1] + '-' + data2[0];
+        lancamento.dataVencimentoFormatada = date.formatarDataBR(lancamento.dataVencimento);
+        lancamento.dataVencimento = lancamento.dataVencimento + 'T01:00:00';
+        alert(JSON.stringify(lancamento));
         this.setState({ aguardarCadastro: true });
-        console.log(JSON.stringify(this.state.lancamento));
         const resposta = await LancamentoService.pay(this.state.lancamento);
             this.setState({
                 aguardarCadastro: false,
@@ -174,7 +176,7 @@ class LancamentoPay extends Component {
                                                         <i className="material-icons md-18 mr-2">date_range</i>
                                                     </InputGroup.Text>
                                                 </InputGroup.Prepend>
-                                                <Form.Control placeholder="__/__/____" aria-describedby="dataVencimento" name="dataVencimento" value={state.lancamento.dataVencimento} onChange={this.handleChange} />
+                                                <Form.Control type="date" placeholder="__/__/____" aria-describedby="dataVencimento" name="dataVencimento" value={state.lancamento.dataVencimento} onChange={this.handleChange} />
                                             </InputGroup>
                                         </Form.Group>
                                     </Col>

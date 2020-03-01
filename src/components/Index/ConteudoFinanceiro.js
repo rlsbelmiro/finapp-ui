@@ -36,7 +36,7 @@ class ConteudoFinannceiro extends Component {
         return (
             <Container fluid="true">
                 <Row>
-                    <Col md={state.colunasMenu} className="border bg-success">
+                    <Col md={state.colunasMenu} className="border bg-success" id="menuConteudo">
                         <Saldo exibir={!state.menuRetraido}  />
                         <MenuConteudo exibir={!state.menuRetraido} clsIcone={state.clsIcone} clsNav={state.clsNav} />
         <p className="text-right mt-4"><Link className="h3 text-white" onClick={this.exibirEsconderMenu}><i class="material-icons md-36">{state.menuRetraido ? 'keyboard_arrow_right' : 'keyboard_arrow_left'}</i></Link></p>

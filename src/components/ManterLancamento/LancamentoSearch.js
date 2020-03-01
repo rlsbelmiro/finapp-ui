@@ -34,6 +34,7 @@ class LancamentoSearch extends Component {
             situacao: [],
             carteiras: [],
             cartoes: [],
+            categorias: [],
             show: false,
             filtroSelecionado: {
                 tipo: null,
@@ -41,6 +42,7 @@ class LancamentoSearch extends Component {
                 situacao: null,
                 carteira: {},
                 cartao: {},
+                categorias: [],
                 periodoInicio: '',
                 periodoFim: ''
             }
@@ -55,6 +57,10 @@ class LancamentoSearch extends Component {
                 situacao: null,
                 carteira: {},
                 cartao: {},
+                categorias: [ {
+                    id: 0,
+                    nome: ''
+                }],
                 periodoInicio: '',
                 periodoFim: ''
             }
@@ -72,7 +78,8 @@ class LancamentoSearch extends Component {
             datas: resposta.datas,
             situacao: resposta.situacao,
             carteiras: resposta.carteiras,
-            cartoes: resposta.cartoes
+            cartoes: resposta.cartoes,
+            categorias: resposta.categorias
         });
         this.resetState();
 
@@ -107,6 +114,13 @@ class LancamentoSearch extends Component {
                 break;
             case "cartao":
                 selecao.cartao = valor;
+                break;
+            case "categoria":
+                selecao.categorias = new Array();
+                selecao.categorias.push({
+                    id: valor.id,
+                    nome: valor.nome
+                })
                 break;
         }
 
@@ -286,7 +300,7 @@ class LancamentoSearch extends Component {
                                     </Dropdown.Menu>
                                 </Dropdown>
 
-                                <Dropdown id="pesquisa_periodo" className="mr-1" style={{display: this.props.pesquisarPorData ? '' : 'none'}}>
+                                <Dropdown id="pesquisa_periodo" className="mr-1" style={{ display: this.props.pesquisarPorData ? '' : 'none' }}>
                                     <Dropdown.Toggle variant="success">
                                         <i className="material-icons md-18 mr-2">date_range</i>
                                         {state.filtroSelecionado.data === "SELECIONARDATAS" ? state.filtroSelecionado.periodoInicio + ' à ' + state.filtroSelecionado.periodoFim : this.getDescricaoTipoData(state.filtroSelecionado.data)}
@@ -346,6 +360,22 @@ class LancamentoSearch extends Component {
                                         <Dropdown.Item onClick={() => this.handleChange('cartao', {})}>Todos</Dropdown.Item>
                                     </Dropdown.Menu>
                                 </Dropdown>
+
+                                <Dropdown id="pesquisa_categorias" className="mr-1">
+                                    <Dropdown.Toggle variant="success">
+                                        Categoria: {state.filtroSelecionado.categorias.length > 0 ? state.filtroSelecionado.categorias[0].nome : ''}
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu>
+                                        {
+                                            state.categorias.map(x =>
+                                                <Dropdown.Item onClick={() => this.handleChange('categoria', x)}>{x.nome}</Dropdown.Item>
+                                            )
+                                        }
+                                        <hr />
+                                        <Dropdown.Item onClick={() => this.handleChange('categoria', {})}>Todos</Dropdown.Item>
+                                    </Dropdown.Menu>
+                                </Dropdown>
+
                                 <Button variant="success" onClick={this.handleSubmit}>Pesquisar</Button>
                                 <Button variant="danger" onClick={this.handleLimparForm}>Limpar</Button>
                             </ButtonGroup>

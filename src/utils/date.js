@@ -30,11 +30,10 @@ export function formatarDataIngles(dataString){
 }
 
 export function formatarDataBR(dataString){
-    var data = new Date(dataString);
-    var dia  = data.getDate().toString().padStart(2, '0');
-    var mes  = (data.getMonth()+1).toString().padStart(2, '0'); //+1 pois no getMonth Janeiro começa com zero.
-    var ano  = data.getFullYear();
-    return dia+'/'+mes+'/'+ano;
+    if(dataString == null)
+        return '';
+    var data = dataString.split('-')
+    return data[2]+'/'+data[1]+'/'+data[0];
 }
 
 function getNomePeriodo(value,ano){

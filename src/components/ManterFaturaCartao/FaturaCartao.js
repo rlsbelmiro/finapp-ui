@@ -322,7 +322,7 @@ class FaturaCartao extends Component {
         const { state } = this;
         return (
             <Modal show={this.state.show} onHide={this.handleClose} size="lg">
-                <Modal.Header closeButton>
+                <Modal.Header closeButton className="bg-success text-white">
                     <Modal.Title>
                         Fatura de cartão ({state.faturaCartao.id})
                         </Modal.Title>

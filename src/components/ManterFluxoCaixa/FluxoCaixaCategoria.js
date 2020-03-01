@@ -93,7 +93,7 @@ class FluxoCaixaCategoria extends Component {
         let { filtro } = this.state;
         filtro.categorias = new Array();
         var resposta = await CategoriaService.listAtivas();
-        var qtdPeriodos = 12;
+        var qtdPeriodos = 6;
         var periodos = date.getPeriodosFluxoCaixa(qtdPeriodos);
 
 

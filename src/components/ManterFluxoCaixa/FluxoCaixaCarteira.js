@@ -84,7 +84,7 @@ class FluxoCaixaCarteira extends Component {
         var fl = {
             registros: []
         }
-        var qtdPeriodos = 12;
+        var qtdPeriodos = 6;
         var periodos = date.getPeriodosFluxoCaixa(qtdPeriodos);
         var dataIn = periodos[0].periodoInicio.split('/');
         var dataFin = periodos[qtdPeriodos - 1].periodoFim.split('/');
@@ -246,13 +246,12 @@ class FluxoCaixaCarteira extends Component {
                                                             state.periodos.map((p,iP) => {
                                                                 return (
                                                                     <td key={"periodoI-" + iP} >
-                                                                        <label  style={{ display: p.saldoAnterior == 0 ? 'none' : '' }} >{
+                                                                        <label>{
                                                                             new Intl.NumberFormat('pt-BR', {
                                                                                 style: 'currency',
                                                                                 currency: 'BRL'
                                                                             }).format(p.saldoAnterior)
                                                                         }</label>
-                                                                        <label style={{ display: p.saldoAnterior != 0 ? 'none' : '' }}>--</label>
                                                                     </td>
                                                                 )
                                                             })
