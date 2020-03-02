@@ -9,7 +9,9 @@ import AgendaDetalhe from '../ManterAgenda/AgendaDetalhe';
 
 class FluxoCaixaCategoria extends Component {
     static defaultProps = {
-        exibir: false
+        exibir: false,
+        qtd: 6,
+        tipoPeriodo: 'Mês'
     }
 
     constructor(props) {
@@ -69,6 +71,11 @@ class FluxoCaixaCategoria extends Component {
 
     componentDidMount() {
         this.onLoad();
+        Channel.on('fluxoCaixa:agrupar',this.onLoad);
+    }
+
+    componentWillUnmount(){
+        Channel.removeListener('fluxoCaixa:agrupar',this.onLoad);
     }
 
     carregarDetalhesLancamento(categoria, periodo) {
@@ -93,8 +100,15 @@ class FluxoCaixaCategoria extends Component {
         let { filtro } = this.state;
         filtro.categorias = new Array();
         var resposta = await CategoriaService.listAtivas();
-        var qtdPeriodos = 6;
-        var periodos = date.getPeriodosFluxoCaixa(qtdPeriodos);
+        var qtdPeriodos = this.props.qtd;
+        var tipoPeriodo = this.props.tipoPeriodo;
+        var periodos = new Array();
+        if(this.props.dataInicial){
+            var data = new Date(date.formatarDataIngles(this.props.dataInicial));
+            periodos = date.getPeriodosFluxoCaixa(qtdPeriodos,tipoPeriodo,data);
+        } else {
+            periodos = date.getPeriodosFluxoCaixa(qtdPeriodos,tipoPeriodo);
+        }
 
 
 

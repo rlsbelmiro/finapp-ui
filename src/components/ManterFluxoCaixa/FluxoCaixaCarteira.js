@@ -8,7 +8,9 @@ import AgendaDetalhe from '../ManterAgenda/AgendaDetalhe';
 
 class FluxoCaixaCarteira extends Component {
     static defaultProps = {
-        exibir: false
+        exibir: false,
+        qtd: 6,
+        tipoPeriodo: 'Mês'
     }
 
     constructor(props) {
@@ -64,6 +66,11 @@ class FluxoCaixaCarteira extends Component {
 
     componentDidMount() {
         this.onLoad();
+        Channel.on('fluxoCaixa:agrupar',this.onLoad);
+    }
+
+    componentWillUnmount(){
+        Channel.removeListener('fluxoCaixa:agrupar',this.onLoad);
     }
 
     carregarDetalhesLancamento(categoria,periodo) {
@@ -84,8 +91,15 @@ class FluxoCaixaCarteira extends Component {
         var fl = {
             registros: []
         }
-        var qtdPeriodos = 6;
-        var periodos = date.getPeriodosFluxoCaixa(qtdPeriodos);
+        var qtdPeriodos = this.props.qtd;
+        var tipoPeriodo = this.props.tipoPeriodo;
+        var periodos = new Array();
+        if(this.props.dataInicial){
+            var data = new Date(date.formatarDataIngles(this.props.dataInicial));
+            periodos = date.getPeriodosFluxoCaixa(qtdPeriodos,tipoPeriodo,data);
+        } else {
+            periodos = date.getPeriodosFluxoCaixa(qtdPeriodos,tipoPeriodo);
+        }
         var dataIn = periodos[0].periodoInicio.split('/');
         var dataFin = periodos[qtdPeriodos - 1].periodoFim.split('/');
         filtro.periodoInicio = dataIn[2] + '-' + dataIn[1] + '-' + dataIn[0];
@@ -292,9 +306,6 @@ class FluxoCaixaCarteira extends Component {
                                                                 )
                                                             })
                                                         }
-                                                    </tr>
-                                                    <tr>
-                                                        <td colSpan={l.periodos.length + 1} style={{ border: '4px solid #999', padding: '1px' }}></td>
                                                     </tr>
                                                 </>
                                             )
