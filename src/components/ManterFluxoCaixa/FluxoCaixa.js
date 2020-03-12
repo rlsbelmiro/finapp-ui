@@ -29,7 +29,12 @@ class FluxoCaixa extends Component {
             carteiras: [],
             categorias: [],
             filtro: {
-                situacao: ''
+                situacao: '',
+                carteira: {},
+                categorias: [{
+                    id: 0,
+                    nome: ''
+                }]
             },
             agrupamento: {
                 qtdPeriodos: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
@@ -80,6 +85,16 @@ class FluxoCaixa extends Component {
                 break;
             case "situacao":
                 filtro.situacao = valor;
+                break;
+            case "carteira":
+                filtro.carteira = valor;
+                break;
+            case "categoria":
+                filtro.categorias = new Array();
+                filtro.categorias.push({
+                    id: valor.id,
+                    nome: valor.nome
+                })
                 break;
         }
 
@@ -185,6 +200,36 @@ class FluxoCaixa extends Component {
                                     </Dropdown.Menu>
                                 </Dropdown>
 
+                                <Dropdown id="pesquisa_carteira" className="mr-1">
+                                    <Dropdown.Toggle variant="success">
+                                        Carteira: {state.filtro.carteira.descricao}
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu>
+                                        {
+                                            state.carteiras.map(x =>
+                                                <Dropdown.Item className={state.filtro.carteira.descricao === x.descricao ? 'active' : ''} onClick={() => this.handleChange('carteira', x)}>{x.descricao}</Dropdown.Item>
+                                            )
+                                        }
+                                        <hr />
+                                        <Dropdown.Item onClick={() => this.handleChange('carteira', {})}>Todos</Dropdown.Item>
+                                    </Dropdown.Menu>
+                                </Dropdown>
+
+                                <Dropdown id="pesquisa_categorias" className="mr-1">
+                                    <Dropdown.Toggle variant="success">
+                                        Categoria: {state.filtro.categorias.length > 0 ? state.filtro.categorias[0].nome : ''}
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu>
+                                        {
+                                            state.categorias.map(x =>
+                                                <Dropdown.Item className={state.filtro.categorias[0].nome === x.nome ? 'active' : ''} onClick={() => this.handleChange('categoria', x)}>{x.nome}</Dropdown.Item>
+                                            )
+                                        }
+                                        <hr />
+                                        <Dropdown.Item onClick={() => this.handleChange('categoria', {})}>Todos</Dropdown.Item>
+                                    </Dropdown.Menu>
+                                </Dropdown>
+
                                 <Button variant="success" onClick={this.handleSubmit}>Gerar</Button>
 
                             </ButtonGroup>
@@ -195,10 +240,20 @@ class FluxoCaixa extends Component {
                 <LancamentoForm habilitarNovoLcto={false} />
                 <Tabs id="tabFluxoCaixa" activeKey={state.tabAtiva} onSelect={this.handleTabs}>
                     <Tab eventKey="categoria" title="Por categoria">
-                        <FluxoCaixaCategoria exibir={state.fluxoPorCategoria} qtd={state.agrupamento.qtd} tipoPeriodo={state.agrupamento.tipo} dataInicial={state.agrupamento.dataInicial} />
+                        <FluxoCaixaCategoria 
+                            exibir={state.fluxoPorCategoria} 
+                            qtd={state.agrupamento.qtd} 
+                            tipoPeriodo={state.agrupamento.tipo} 
+                            dataInicial={state.agrupamento.dataInicial} 
+                            filtros={state.filtro} />
                     </Tab>
                     <Tab eventKey="carteira" title="Por carteira">
-                        <FluxoCaixaCarteira exibir={state.fluxoPorCarteira} qtd={state.agrupamento.qtd} tipoPeriodo={state.agrupamento.tipo} dataInicial={state.agrupamento.dataInicial} />
+                        <FluxoCaixaCarteira 
+                            exibir={state.fluxoPorCarteira} 
+                            qtd={state.agrupamento.qtd} 
+                            tipoPeriodo={state.agrupamento.tipo} 
+                            dataInicial={state.agrupamento.dataInicial}
+                            filtros={state.filtro} />
                     </Tab>
                 </Tabs>
 

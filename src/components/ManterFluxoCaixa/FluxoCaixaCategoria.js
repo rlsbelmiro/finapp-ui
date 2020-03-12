@@ -11,7 +11,12 @@ class FluxoCaixaCategoria extends Component {
     static defaultProps = {
         exibir: false,
         qtd: 6,
-        tipoPeriodo: 'Mês'
+        tipoPeriodo: 'Mês',
+        filtros: {
+            situacao: '',
+            carteira: {},
+            categorias: []
+        }
     }
 
     constructor(props) {
@@ -19,7 +24,6 @@ class FluxoCaixaCategoria extends Component {
 
         this.onLoad = this.onLoad.bind(this);
         this.carregarDetalhesLancamento = this.carregarDetalhesLancamento.bind(this);
-        this.exibirEsconder = this.exibirEsconder.bind(this);
 
         this.state = {
             fluxo: [
@@ -63,7 +67,9 @@ class FluxoCaixaCategoria extends Component {
             filtro: {
                 periodoInicio: '',
                 periodoFim: '',
-                categorias: []
+                categorias: [],
+                situacao: null,
+                carteira: {}
             },
             aguardar: true
         }
@@ -97,6 +103,7 @@ class FluxoCaixaCategoria extends Component {
     }
 
     async onLoad() {
+        this.setState({aguardar: true});
         let { filtro } = this.state;
         filtro.categorias = new Array();
         var resposta = await CategoriaService.listAtivas();
@@ -122,6 +129,13 @@ class FluxoCaixaCategoria extends Component {
             var dataFin = periodos[qtdPeriodos - 1].periodoFim.split('/');
             filtro.periodoInicio = dataIn[2] + '-' + dataIn[1] + '-' + dataIn[0];
             filtro.periodoFim = dataFin[2] + '-' + dataFin[1] + '-' + dataFin[0];
+            if(this.props.filtros.situacao != '')
+                filtro.situacao = this.props.filtros.situacao;
+            if(this.props.filtros.carteira)
+                filtro.carteira = this.props.filtros.carteira;
+            if(this.props.filtros.categorias.length > 0 && this.props.filtros.categorias[0].id > 0)
+                filtro.categorias = this.props.filtros.categorias;
+                
             var respFluxo = await FluxoCaixaService.getValores(filtro);
             if (respFluxo.sucesso) {
                 var fl = new Array();
@@ -230,25 +244,6 @@ class FluxoCaixaCategoria extends Component {
                 });
             }
         }
-    }
-
-    exibirEsconder(c){
-        /*const { state } = this;
-
-        state.fluxo[0].registros.filter(x => x.categoriaSuperiorId == c.id).forEach(f => {
-            f.exibir = !f.exibir;
-            if(!f.analiico){
-                state.fluxo[0].registros.filter(o => o.categoriaSuperiorId == f.id).forEach(f1 => {
-                    f1.exibir = f.exibir
-                });
-            }
-        });
-
-        state.fluxo[0].registros.filter(x => x.id == c.id).forEach(f => {
-            f.iconeEsconder = !f.iconeEsconder;
-        });
-
-        this.setState({fluxo: state.fluxo});*/
     }
 
 

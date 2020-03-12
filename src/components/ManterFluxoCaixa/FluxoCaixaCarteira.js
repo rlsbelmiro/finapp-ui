@@ -10,7 +10,12 @@ class FluxoCaixaCarteira extends Component {
     static defaultProps = {
         exibir: false,
         qtd: 6,
-        tipoPeriodo: 'Mês'
+        tipoPeriodo: 'Mês',
+        filtros: {
+            situacao: '',
+            carteira: {},
+            categorias: []
+        }
     }
 
     constructor(props) {
@@ -58,7 +63,9 @@ class FluxoCaixaCarteira extends Component {
             ],
             filtro: {
                 periodoInicio: '',
-                periodoFim: ''
+                periodoFim: '',
+                situacao: null,
+                carteira: {}
             },
             aguardar: true
         }
@@ -86,6 +93,7 @@ class FluxoCaixaCarteira extends Component {
     }
 
     async onLoad() {
+        this.setState({aguardar: true});
         const { state } = this;
         let { filtro } = this.state;
         var fl = {
@@ -104,8 +112,17 @@ class FluxoCaixaCarteira extends Component {
         var dataFin = periodos[qtdPeriodos - 1].periodoFim.split('/');
         filtro.periodoInicio = dataIn[2] + '-' + dataIn[1] + '-' + dataIn[0];
         filtro.periodoFim = dataFin[2] + '-' + dataFin[1] + '-' + dataFin[0];
-        var resposta = await FluxoCaixaService.getValoresCarteira(filtro);
+        if(this.props.filtros.situacao != '')
+            filtro.situacao = this.props.filtros.situacao;
+        if(this.props.filtros.carteira)
+            filtro.carteira = this.props.filtros.carteira;
+        if(this.props.filtros.categorias.length > 0 && this.props.filtros.categorias[0].id > 0)
+            filtro.categorias = this.props.filtros.categorias;
+        else
+            filtro.categorias = null;
 
+        var resposta = await FluxoCaixaService.getValoresCarteira(filtro);
+        
         if (resposta.sucesso) {
             var temp = resposta.objeto;
             for (var x = 0; x < temp.length; x++) {
@@ -186,6 +203,17 @@ class FluxoCaixaCarteira extends Component {
                 filtro: filtro
             });
 
+        } else {
+            let fluxo = this.state.fluxo;
+            while(fluxo.length){
+                fluxo.pop();
+            }
+            this.setState({
+                aguardar: false,
+                fluxo: fl,
+                periodos: periodos,
+                filtro: filtro
+            });
         }
     }
 
