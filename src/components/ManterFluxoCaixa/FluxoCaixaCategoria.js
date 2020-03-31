@@ -255,7 +255,7 @@ class FluxoCaixaCategoria extends Component {
                 <div className="load" style={{ display: (state.aguardar ? '' : 'none') }} ><i className="fa fa-cog fa-spin fa-3x fa-fw"></i>Aguarde...</div>
                 <AgendaDetalhe />
                 <Container fluid="true" style={{ display: (!state.aguardar ? '' : 'none') }}>
-                    <Table striped bordered hover size="sm" className="mt-2">
+                    <Table striped bordered hover size="sm" className="mt-2" id="tabelaFluxoCaixaCategoria">
                         <thead>
                             <tr className="bg-success text-white">
                                 <th>Fluxo de caixa por categoria</th>

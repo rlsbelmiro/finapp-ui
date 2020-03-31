@@ -248,7 +248,7 @@ class FluxoCaixaCarteira extends Component {
             <div id="fluxoPorCarteira" style={{ display: props.exibir ? '' : 'none' }}>
                 <div className="load" style={{ display: (state.aguardar ? '' : 'none') }} ><i className="fa fa-cog fa-spin fa-3x fa-fw"></i>Aguarde...</div>
                 <Container fluid="true" style={{ display: (!state.aguardar ? '' : 'none') }}>
-                    <Table bordered hover size="sm" className="mt-2">
+                    <Table bordered hover size="sm" className="mt-2" id="tabelaFluxoPorCarteira">
                         <thead>
                             <tr className="bg-success text-white">
                                 <th className="w-25">Carteira</th>

@@ -8,5 +8,11 @@ export const FluxoCaixaService = {
     },
     getValoresCarteira(filtro){
         return ApiService.post(endpoint + '/obterTotaisCarteira',filtro);
+    },
+    gerarExcel(objeto){
+        return ApiService.post(endpoint + '/gerarExcel',objeto);
+    },
+    gerarPdf(objeto){
+        return ApiService.post(endpoint + '/gerarPdf',objeto);
     }
 }
