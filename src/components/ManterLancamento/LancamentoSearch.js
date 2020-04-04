@@ -8,9 +8,10 @@ import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Dropdown from 'react-bootstrap/Dropdown'
 import { LancamentoService } from '../../service/LancamentoService';
 import { Channel } from '../../service/EventService';
-import Modal from 'react-bootstrap/Modal'
-import Form from 'react-bootstrap/Form'
-import InputGroup from 'react-bootstrap/InputGroup'
+import Modal from 'react-bootstrap/Modal';
+import Form from 'react-bootstrap/Form';
+import InputGroup from 'react-bootstrap/InputGroup';
+import * as date from '../../utils/date.js';
 
 class LancamentoSearch extends Component {
     static defaultProps = {
@@ -27,6 +28,7 @@ class LancamentoSearch extends Component {
         this.handleClose = this.handleClose.bind(this);
         this.handleChangeDatas = this.handleChangeDatas.bind(this);
         this.handleInformarDatas = this.handleInformarDatas.bind(this);
+        this.getDescricaoPeriodo = this.getDescricaoPeriodo.bind(this);
 
         this.state = {
             tipo: [],
@@ -144,15 +146,6 @@ class LancamentoSearch extends Component {
 
     handleInformarDatas() {
         var filtro = this.state.filtroSelecionado;
-        if (filtro.periodoInicio != '') {
-            var s = filtro.periodoInicio.split('/');
-            filtro.periodoInicio = s[2] + '-' + s[1] + '-' + s[0];
-        }
-        if (filtro.periodoFim != '') {
-            var s = filtro.periodoFim.split('/');
-            filtro.periodoFim = s[2] + '-' + s[1] + '-' + s[0];
-        }
-
         this.setState({ filtroSelecionado: filtro, show: false })
     }
 
@@ -195,6 +188,14 @@ class LancamentoSearch extends Component {
                 break;
         }
 
+        return retorno;
+    }
+
+    getDescricaoPeriodo(){
+        const { state } = this;
+        let retorno = date.formatarDataBR(state.filtroSelecionado.periodoInicio);
+        retorno += " à ";
+        retorno += date.formatarDataBR(state.filtroSelecionado.periodoFim);
         return retorno;
     }
 
@@ -252,20 +253,20 @@ class LancamentoSearch extends Component {
                                                     <i className="material-icons md-18 mr-2">date_range</i>
                                                 </InputGroup.Text>
                                             </InputGroup.Prepend>
-                                            <Form.Control required placeholder="__/__/____" aria-describedby="dataInicio" name="dataInicio" value={state.filtroSelecionado.periodoInicio} onChange={this.handleChangeDatas} />
+                                            <Form.Control type="date" required placeholder="__/__/____" aria-describedby="dataInicio" name="dataInicio" value={state.filtroSelecionado.periodoInicio} onChange={this.handleChangeDatas} />
                                         </InputGroup>
                                     </Form.Group>
                                 </Col>
                                 <Col>
                                     <Form.Group controlId="dataFim">
-                                        <Form.Label>Data Início</Form.Label>
+                                        <Form.Label>Data Fim</Form.Label>
                                         <InputGroup>
                                             <InputGroup.Prepend>
                                                 <InputGroup.Text id="dataFim">
                                                     <i className="material-icons md-18 mr-2">date_range</i>
                                                 </InputGroup.Text>
                                             </InputGroup.Prepend>
-                                            <Form.Control required placeholder="__/__/____" aria-describedby="dataFim" name="dataFim" value={state.filtroSelecionado.periodoFim} onChange={this.handleChangeDatas} />
+                                            <Form.Control type="date" required placeholder="__/__/____" aria-describedby="dataFim" name="dataFim" value={state.filtroSelecionado.periodoFim} onChange={this.handleChangeDatas} />
                                         </InputGroup>
                                     </Form.Group>
                                 </Col>
@@ -303,7 +304,7 @@ class LancamentoSearch extends Component {
                                 <Dropdown id="pesquisa_periodo" className="mr-1" style={{ display: this.props.pesquisarPorData ? '' : 'none' }}>
                                     <Dropdown.Toggle variant="success">
                                         <i className="material-icons md-18 mr-2">date_range</i>
-                                        {state.filtroSelecionado.data === "SELECIONARDATAS" ? state.filtroSelecionado.periodoInicio + ' à ' + state.filtroSelecionado.periodoFim : this.getDescricaoTipoData(state.filtroSelecionado.data)}
+                                        {state.filtroSelecionado.data === "SELECIONARDATAS" ? this.getDescricaoPeriodo() : this.getDescricaoTipoData(state.filtroSelecionado.data)}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
                                         {

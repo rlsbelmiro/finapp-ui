@@ -11,6 +11,7 @@ import ModalAlert from '../Commons/ModalAlert';
 import { Channel } from '../../service/EventService';
 
 import * as date from '../../utils/date';
+import * as monetario from '../../utils/monetario';
 
 
 class LancamentoPay extends Component {
@@ -79,7 +80,7 @@ class LancamentoPay extends Component {
             lancamento = lcto.objeto;
             lancamento.dataVencimento = date.formatarDataIngles(lancamento.dataVencimentoFormatada);
             this.setState({
-                valorEntrada: lancamento.valor.toString().replace('.', ','),
+                valorEntrada: monetario.formatarMoeda(lancamento.valor.toString()),
             })
         }
 
@@ -105,10 +106,9 @@ class LancamentoPay extends Component {
 
         var lancamento = this.state.lancamento;
 
-        lancamento.valor = parseFloat(this.state.valorEntrada.replace(',', '.'));
+        lancamento.valor = monetario.parseDecimal(this.state.valorEntrada);
         lancamento.dataVencimentoFormatada = date.formatarDataBR(lancamento.dataVencimento);
         lancamento.dataVencimento = lancamento.dataVencimento + 'T01:00:00';
-        alert(JSON.stringify(lancamento));
         this.setState({ aguardarCadastro: true });
         const resposta = await LancamentoService.pay(this.state.lancamento);
             this.setState({
@@ -132,7 +132,8 @@ class LancamentoPay extends Component {
                 lancamento.dataVencimento = value;
                 break;
             case "valor":
-                this.state.valorEntrada = value;
+                let valor = monetario.formatarMoeda(value);
+                this.state.valorEntrada = valor;
                 break;
             case "carteiraId":
                 lancamento.carteiraId = value;

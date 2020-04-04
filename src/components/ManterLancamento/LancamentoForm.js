@@ -14,10 +14,11 @@ import Table from 'react-bootstrap/Table'
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 import Tooltip from 'react-bootstrap/Tooltip'
 import { CategoriaService } from '../../service/CategoriaService'
-import CategoriaForm from '../ManterCategoria/CategoriaForm'
+import CategoriaForm from '../ManterCategoria/CategoriaForm';
 
 
 import * as date from '../../utils/date';
+import * as monetario from '../../utils/monetario';
 
 
 class LancamentoForm extends Component {
@@ -78,6 +79,7 @@ class LancamentoForm extends Component {
             aguardar: true,
             erro: false,
             sucesso: false,
+            alerta: false,
             mensagem: '',
             isCartao: false,
             isParcelado: false,
@@ -88,7 +90,9 @@ class LancamentoForm extends Component {
             categoriasRateio: [],
             categoriaRateioId: 0,
             valorRateioFormatado: '',
-            valorRateio: 0
+            valorRateio: 0,
+            menagemRateio: '',
+            ehAlteracaoRateio: false
         };
     }
 
@@ -128,13 +132,13 @@ class LancamentoForm extends Component {
             if (lancamento.lancamentoCategorias != null && lancamento.lancamentoCategorias.length == 1) {
                 categoriaSelecionada = lancamento.lancamentoCategorias[0].categoriaId;
                 this.setState({
-                    valorEntrada: lancamento.valor.toString().replace('.', ','),
+                    valorEntrada: monetario.formatarMoeda(lancamento.valor.toString()),
                     isCartao: lancamento.cartaoDeCreditoId > 0,
                     categoriaSelecionadaId: categoriaSelecionada
                 });
             } else if (lancamento.lancamentoCategorias != null && lancamento.lancamentoCategorias.length > 1) {
                 this.setState({
-                    valorEntrada: lancamento.valor.toString().replace('.', ','),
+                    valorEntrada: monetario.formatarMoeda(lancamento.valor.toString()),
                     isCartao: lancamento.cartaoDeCreditoId > 0,
                     rateioCategorias: true,
                     categoriasRateio: lancamento.lancamentoCategorias
@@ -143,7 +147,7 @@ class LancamentoForm extends Component {
             else {
                 lancamento.lancamentoCategorias = new Array();
                 this.setState({
-                    valorEntrada: lancamento.valor.toString().replace('.', ','),
+                    valorEntrada: monetario.formatarMoeda(lancamento.valor.toString()),
                     isCartao: lancamento.cartaoDeCreditoId > 0,
                     categoriaSelecionadaId: categoriaSelecionada,
                     lancamento: lancamento
@@ -190,7 +194,7 @@ class LancamentoForm extends Component {
 
         var lancamento = this.state.lancamento;
 
-        lancamento.valor = parseFloat(this.state.valorEntrada.replace(',', '.'));
+        lancamento.valor = monetario.parseDecimal(this.state.valorEntrada);
         lancamento.dataCompetencia = lancamento.dataCompetenciaFormatada + 'T01:00:00';
         lancamento.dataVencimento = lancamento.dataVencimentoFormatada + 'T01:00:00';
         if (this.state.rateioCategorias) {
@@ -212,10 +216,23 @@ class LancamentoForm extends Component {
                 var lctoCategoria = {
                     lancamentoId: 0,
                     categoriaId: categoria.id,
-                    valor: parseFloat(this.state.valorEntrada.replace(',', '.')),
+                    valor: monetario.parseDecimal(this.state.valorEntrada),
                     tipo: categoria.tipo
                 }
                 lancamento.lancamentoCategorias.push(lctoCategoria);
+            }
+        } else {
+            let valorRateio = 0;
+            let valorLcto = monetario.parseDecimal(this.state.valorEntrada);
+            lancamento.lancamentoCategorias.forEach(x => valorRateio += x.valor);
+
+            if(valorRateio != valorLcto){
+                this.setState({
+                    aguardarCadastro: false,
+                    mensagem: 'O valor de rateio de categorias deve ser igual ao valor do lançamento.',
+                    alerta: true
+                });
+                return;
             }
         }
 
@@ -276,8 +293,9 @@ class LancamentoForm extends Component {
                 
                 break;
             case "valor":
-                this.state.valorEntrada = value;
-                this.state.valorParcela = parseFloat(value.replace(',', '.'));
+                let valor = monetario.formatarMoeda(value);
+                this.state.valorEntrada = valor;
+                this.state.valorParcela = monetario.parseDecimal(valor);
                 break;
             case "carteiraId":
                 lancamento.carteiraId = value;
@@ -291,7 +309,7 @@ class LancamentoForm extends Component {
             case "qtdParcelas":
                 lancamento.qtdParcelas = value;
                 if (lancamento.qtdParcelas > 0 && !lancamento.parcelamentoFixo) {
-                    this.state.valorParcela = parseFloat(this.state.valorEntrada.replace(',', '.')) / lancamento.qtdParcelas;
+                    this.state.valorParcela = monetario.parseDecimal(this.state.valorEntrada) / lancamento.qtdParcelas;
                 }
                 break;
             case "categoriaId":
@@ -304,7 +322,7 @@ class LancamentoForm extends Component {
                     var lctoCategoria = {
                         lancamentoId: 0,
                         categoriaId: categoria.id,
-                        valor: parseFloat(this.state.valorEntrada.replace(',', '.')),
+                        valor: monetario.parseDecimal(this.state.valorEntrada),
                         tipo: categoria.tipo
                     }
                     lancamento.lancamentoCategorias.push(lctoCategoria);
@@ -314,8 +332,9 @@ class LancamentoForm extends Component {
                 categoriaRateioId = value;
                 break;
             case "valorCategoria":
-                valorRateioFormatado = value;
-                valorRateio = parseFloat(value.replace(',', '.'));
+                let vl = monetario.formatarMoeda(value);
+                valorRateioFormatado = monetario.formatarMoeda(vl);
+                valorRateio = monetario.parseDecimal(vl);
                 break;
 
         }
@@ -434,7 +453,18 @@ class LancamentoForm extends Component {
             categorias = new Array();
         }
 
+        if(state.categoriaRateioId == 0){
+            this.setState({mensagemRateio: 'Selecione uma categoria'});
+            return;
+        }
+
+        if(state.valorRateio == 0){
+            this.setState({mensagemRateio: 'Informe o valor do rateio'});
+            return
+        }
+
         var index = state.categorias.findIndex(c => c.id == state.categoriaRateioId);
+        var indexAlteracao = state.categoriasRateio.findIndex(c => c.categoriaId == state.categoriaRateioId);
 
 
         var c = {
@@ -445,8 +475,13 @@ class LancamentoForm extends Component {
                 nome: index >= 0 ? state.categorias[index].nome : ''
             }
         }
-        categorias.push(c);
-        this.setState({ categoriasRateio: categorias, categoriaRateioId: 0, valorRateioFormatado: '', valorRateio: 0 });
+
+        if(indexAlteracao < 0){
+            categorias.push(c);
+        } else {
+            categorias[index] = c;
+        }
+        this.setState({ mensagemRateio: '', categoriasRateio: categorias, categoriaRateioId: 0, valorRateioFormatado: '', valorRateio: 0, ehAlteracaoRateio: false });
     }
 
     excluirCategoria() {
@@ -459,7 +494,7 @@ class LancamentoForm extends Component {
             categorias.splice(index, 1);
         }
 
-        this.setState({ categoriasRateio: categorias, categoriaRateioId: 0, valorRateioFormatado: '', valorRateio: 0 })
+        this.setState({ categoriasRateio: categorias, categoriaRateioId: 0, valorRateioFormatado: '', valorRateio: 0, ehAlteracaoRateio: false })
     }
 
     editarCategoria(id) {
@@ -470,7 +505,8 @@ class LancamentoForm extends Component {
 
         if (index > -1) {
             var c = categorias[index];
-            this.setState({ categoriaRateioId: c.categoriaId, valorRateioFormatado: c.valor.toString(), valorRateio: c.valor });
+            let valor = c.valor;
+            this.setState({ categoriaRateioId: c.categoriaId, valorRateioFormatado: monetario.formatarMoeda(valor.toString().replace('.','')), valorRateio: valor, ehAlteracaoRateio: true });
         }
 
 
@@ -506,7 +542,7 @@ class LancamentoForm extends Component {
         return (
             <div>
                 <CategoriaForm getIdCategoria={this.marcarCategoriaAposCadastro} />
-                <ModalAlert mensagem={state.mensagem} erro={state.erro} alerta={state.alerta} sucesso={state.sucesso} exibirModal={state.excluir || state.erro || state.sucesso} onCancel={this.onCloseModal} />
+                <ModalAlert mensagem={state.mensagem} erro={state.erro} alerta={state.alerta} sucesso={state.sucesso} alertaComOk={state.alerta} exibirModal={state.excluir || state.erro || state.sucesso || state.alerta} onCancel={this.onCloseModal} />
                 <Button variant="success" className="mt-2" onClick={this.handleShow} style={{ display: this.props.habilitarNovoLcto ? 'block' : 'none' }}>Novo Lançamento</Button>
                 <Modal show={this.state.show} onHide={this.handleClose} size="xl">
                     <Modal.Header closeButton className="bg-success text-white">
@@ -684,10 +720,15 @@ class LancamentoForm extends Component {
                                                 </Form.Group>
                                             </Col>
                                         </Form.Row>
+                                        <Form.Row style={{display: state.mensagemRateio !== '' ? '' : 'none'}}>
+                                            <Col>
+                                                <span className="text-danger">{state.mensagemRateio}</span>
+                                            </Col>
+                                        </Form.Row>
                                         <Form.Row>
                                             <Col>
-                                                <Button style={{ display: state.lancamento.id === 0 || state.lancamento.podeAlterar ? '' : 'none' }} variant="success" onClick={this.adicionarCategoria}>Adicionar</Button>
-                                                <Button style={{ display: state.categoriaRateioId > 0 ? '' : 'none' }} variant="danger" className="ml-2" onClick={this.excluirCategoria}>Excluir</Button>
+                                                    <Button style={{ display: state.lancamento.id === 0 || state.lancamento.podeAlterar ? '' : 'none' }} variant="success" onClick={this.adicionarCategoria}>{state.ehAlteracaoRateio ? 'Alterar' : 'Adicionar'}</Button>
+                                                <Button style={{ display: state.ehAlteracaoRateio ? '' : 'none' }} variant="danger" className="ml-2" onClick={this.excluirCategoria}>Excluir</Button>
                                             </Col>
                                         </Form.Row>
                                     </Form>

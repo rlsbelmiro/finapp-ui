@@ -7,6 +7,7 @@ class ModalAlert extends Component {
         exibirModal: false,
         erro: false,
         alerta: false,
+        alertaComOk: false,
         onConfirm: () => {},
         onCancel: () => {}
     }
@@ -49,11 +50,16 @@ class ModalAlert extends Component {
     render() {
         const { props } = this;
 
-        const styleError = {display: props.erro ? 'inline' : 'none'};
-        const styleWarning = {display: props.alerta ? 'inline' : 'none'};
-        const styleSuccess = {display: props.sucesso ? 'inline' : 'none'};
-        const clsText = props.erro ? 'text-danger' : props.alerta ? 'text-warning' : props.sucesso ? 'text-success' : '';
-        const clsBg = props.erro ? 'bg-danger' : props.alerta ? 'bg-warning' : props.sucesso ? 'bg-success' : '';
+        let styleError = {display: props.erro ? 'inline' : 'none'};
+        let styleWarning = {display: props.alerta ? 'inline' : 'none'};
+        let styleSuccess = {display: props.sucesso ? 'inline' : 'none'};
+        let clsText = props.erro ? 'text-danger' : props.alerta ? 'text-warning' : props.sucesso ? 'text-success' : '';
+        let clsBg = props.erro ? 'bg-danger' : props.alerta ? 'bg-warning' : props.sucesso ? 'bg-success' : '';
+        
+        if(props.alertaComOk){
+            styleWarning = {display: 'none'};
+            styleSuccess = {display: 'inline'};
+        }
         return (
             <div id="modalAlert">
                 <Modal show={this.state.show} onHide={this.handleClose} size="md">

@@ -14,6 +14,9 @@ import { CarteiraService } from '../../service/CarteiraService';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 
+import * as date from '../../utils/date';
+import * as monetario from '../../utils/monetario';
+
 class FaturaCartao extends Component {
     constructor(props) {
         super(props);
@@ -106,8 +109,8 @@ class FaturaCartao extends Component {
                 show: true,
                 idFatura: id,
                 faturaCartao: resposta.objeto,
-                valorPgtoFormatado: resposta.objeto.valorFatura.toString().replace('.', ','),
-                vencimentoFormatado: resposta.objeto.vencimentoFormatado
+                valorPgtoFormatado: monetario.formatarMoeda(resposta.objeto.valorFatura.toString()),
+                vencimentoFormatado: date.formatarDataIngles(resposta.objeto.vencimentoFormatado)
             });
             this.onLoadLancamentos(id);
             this.onLoadLimite();
@@ -203,8 +206,9 @@ class FaturaCartao extends Component {
                 break;
             case "valorFatura":
             case "valorTotalFatura":
-                this.state.valorPgtoFormatado = value;
-                pgto.valor = parseFloat(value.replace(',', '.'));;
+                let vl = monetario.formatarMoeda(value)
+                this.state.valorPgtoFormatado = vl;
+                pgto.valor = monetario.parseDecimal(vl);
                 break;
             case "vencimento":
                 this.state.vencimentoFormatado = value;
@@ -224,21 +228,20 @@ class FaturaCartao extends Component {
             pagamento.carteiraId = this.state.faturaCartao.cartaoDeCredito.carteiraId;
             faturaPagamento.faturaId = this.state.idFatura;
             faturaPagamento.carteiraId = pagamento.carteiraId;
-            faturaPagamento.valor = pagamentoParcial ? 0 : this.state.faturaCartao.valorFatura;
-            faturaPagamento.dataPagamento = this.state.faturaCartao.vencimentoFormatado;
+            faturaPagamento.valor = pagamentoParcial ? 0 : monetario.parseDecimal(this.state.valorPgtoFormatado);
+            faturaPagamento.dataPagamento = date.formatarDataIngles(this.state.faturaCartao.vencimentoFormatado);
             this.setState({ pagamento: pagamento });
         }
     }
 
     async pagarFatura() {
+        debugger;
         var faturaPagamento = this.state.faturaCartaoPagamento;
-        var data = faturaPagamento.dataPagamento.split('/');
         var isValid = true;
         if (faturaPagamento.valor <= 0) {
             this.setState({ mensagemValidacao: 'Informe o valor a pagar' })
             isValid = false;
         }
-        faturaPagamento.dataPagamento = data[2] + '-' + data[1] + '-' + data[0];
 
         if (isValid) {
             var resposta = await FaturaCartaoService.pay(faturaPagamento);
@@ -305,9 +308,9 @@ class FaturaCartao extends Component {
         }
 
         if (isValid) {
-            var data = this.state.vencimentoFormatado.split('/');
-            var vencimento = data[2] + '-' + data[1] + '-' + data[0];
-            var resposta = await FaturaCartaoService.updateDeadline(this.state.idFatura,vencimento,this.state.vencimentoFormatado)
+            let vencimentoUS = this.state.vencimentoFormatado;
+            let vencimentoBR = date.formatarDataBR(vencimentoUS);
+            var resposta = await FaturaCartaoService.updateDeadline(this.state.idFatura,vencimentoUS,vencimentoBR);
             if (resposta.sucesso) {
                 alert(resposta.mensagem);
                 Channel.emit('lancamento:list', true);
@@ -340,7 +343,7 @@ class FaturaCartao extends Component {
                             <Row style={{ display: state.atualizarVencimento ? 'block' : 'none' }}>
                                 <Col sm={12}>
                                     <ButtonGroup>
-                                        <Form.Control style={{ width: '200px' }} aria-describedby="vencimento" name="vencimento" value={state.vencimentoFormatado} onChange={this.handleChange} />
+                                        <Form.Control type="date" style={{ width: '200px' }} aria-describedby="vencimento" name="vencimento" value={state.vencimentoFormatado} onChange={this.handleChange} />
                                         <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Confirmar</Tooltip>}>
                                             <Button variant="success" size="sm" onClick={this.confirmarAtualizacaoVencimento} style={{ display: state.aguardarAtualizacao ? 'none' : 'block' }}><i className="material-icons md-12">check</i></Button>
                                         </OverlayTrigger>
@@ -447,7 +450,7 @@ class FaturaCartao extends Component {
                         <label style={{ display: state.mensagemValidacao != '' ? 'block' : 'none' }} className="font-weight-bold text-danger ml-4">{state.mensagemValidacao}</label>
                         <Form>
                             <Form.Row>
-                                <Col md={3}>
+                                <Col md={4}>
                                     <Form.Group controlId="dataVencimento">
                                         <Form.Label>Dt. Pagamento</Form.Label>
                                         <InputGroup>
@@ -456,7 +459,7 @@ class FaturaCartao extends Component {
                                                     <i className="material-icons md-18 mr-2">date_range</i>
                                                 </InputGroup.Text>
                                             </InputGroup.Prepend>
-                                            <Form.Control placeholder="__/__/____" aria-describedby="dataVencimento" name="dataVencimento" value={state.faturaCartaoPagamento.dataPagamento} onChange={this.handleChange} />
+                                            <Form.Control style={{ width: '150px' }} type="date" placeholder="__/__/____" aria-describedby="dataVencimento" name="dataVencimento" value={state.faturaCartaoPagamento.dataPagamento} onChange={this.handleChange} />
                                         </InputGroup>
                                     </Form.Group>
                                 </Col>
