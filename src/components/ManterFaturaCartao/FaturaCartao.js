@@ -16,6 +16,7 @@ import InputGroup from 'react-bootstrap/InputGroup';
 
 import * as date from '../../utils/date';
 import * as monetario from '../../utils/monetario';
+import ModalAlertCategoria from '../Commons/ModalAlertCategoria';
 
 class FaturaCartao extends Component {
     constructor(props) {
@@ -38,6 +39,8 @@ class FaturaCartao extends Component {
         this.confirmarAtualizacaoValorFatura = this.confirmarAtualizacaoValorFatura.bind(this);
         this.confirmarAtualizacaoVencimento = this.confirmarAtualizacaoVencimento.bind(this);
         this.onLoadLimite = this.onLoadLimite.bind(this);
+        this.cancelarSelecaoCategoria = this.cancelarSelecaoCategoria.bind(this);
+        this.confirmarSelecaoCategoria = this.confirmarSelecaoCategoria.bind(this);
 
         this.state = {
             show: false,
@@ -48,6 +51,10 @@ class FaturaCartao extends Component {
             atualizarValorFatura: false,
             atualizarVencimento: false,
             aguardarAtualizacao: false,
+            buscarCategoriaCredito: false,
+            buscarCategoriaDebito: false,
+            valorDiferencaCredito: 0.0,
+            valorDiferencaDebito: 0.0,
             limiteDisponivel: 0.0,
             pagamento: {
                 pagarTotal: false,
@@ -61,7 +68,9 @@ class FaturaCartao extends Component {
                 dataPagamento: '',
                 carteiraId: 0,
                 valor: 0,
-                faturaId: 0
+                faturaId: 0,
+                categoriaDifCredito: 0,
+                categoriaDifDebito: 0
             },
             faturaCartao: {
                 id: 0,
@@ -132,10 +141,10 @@ class FaturaCartao extends Component {
         }
     }
 
-    async onLoadLimite(){
+    async onLoadLimite() {
         var resposta = await FaturaCartaoService.getLimite(this.state.faturaCartao.cartaoDeCreditoId);
-        if(resposta.sucesso){
-            this.setState({limiteDisponivel: resposta.objeto});
+        if (resposta.sucesso) {
+            this.setState({ limiteDisponivel: resposta.objeto });
         }
     }
 
@@ -149,6 +158,8 @@ class FaturaCartao extends Component {
             vencimentoFormatado: '',
             atualizarValorFatura: false,
             aguardarAtualizacao: false,
+            buscarCategoriaCredito: false,
+            buscarCategoriaDebito: false,
             pagamento: {
                 pagarTotal: false,
                 pagarParcial: false,
@@ -235,7 +246,6 @@ class FaturaCartao extends Component {
     }
 
     async pagarFatura() {
-        debugger;
         var faturaPagamento = this.state.faturaCartaoPagamento;
         var isValid = true;
         if (faturaPagamento.valor <= 0) {
@@ -243,13 +253,19 @@ class FaturaCartao extends Component {
             isValid = false;
         }
 
+
+
         if (isValid) {
-            var resposta = await FaturaCartaoService.pay(faturaPagamento);
-            if (resposta.sucesso) {
-                alert(resposta.mensagem);
-                Channel.emit('lancamento:list', true);
-            } else {
-                alert('erro' + resposta.mensagem);
+            if (faturaPagamento.valor < this.state.faturaCartao.valorFatura) {
+                let diferenca = faturaPagamento.valor - this.state.faturaCartao.valorFatura;
+
+                this.setState({
+                    buscarCategoriaCredito: true,
+                    buscarCategoriaDebito: true,
+                    valorDiferencaCredito: diferenca,
+                    valorDiferencaDebito: diferenca * -1
+                });
+                Channel.emit('selectCategory', true);
             }
         }
     }
@@ -257,6 +273,7 @@ class FaturaCartao extends Component {
     cancelarPagamento() {
         var pagamento = this.state.pagamento;
         pagamento.pagarTotal = false;
+        pagamento.pagarParcial = false;
         this.setState({ pagamento: pagamento });
     }
 
@@ -264,16 +281,16 @@ class FaturaCartao extends Component {
         this.setState({ atualizarValorFatura: true });
     }
 
-    atualizarVencimento(){
-        this.setState({atualizarVencimento: true});
+    atualizarVencimento() {
+        this.setState({ atualizarVencimento: true });
     }
 
     cancelarAtualizacaoFatura() {
         this.setState({ atualizarValorFatura: false });
     }
 
-    cancelarAtualizacaoVencimento(){
-        this.setState({atualizarVencimento: false});
+    cancelarAtualizacaoVencimento() {
+        this.setState({ atualizarVencimento: false });
     }
 
     async confirmarAtualizacaoValorFatura() {
@@ -286,22 +303,25 @@ class FaturaCartao extends Component {
         }
 
         if (isValid) {
-            
-            var resposta = await FaturaCartaoService.updateAmount(this.state.idFatura, faturaPagamento.valor);
-            if (resposta.sucesso) {
-                alert(resposta.mensagem);
-                Channel.emit('lancamento:list', true);
-            } else {
-                alert('erro' + resposta.mensagem);
+            if (faturaPagamento.valor != this.state.faturaCartao.valorFatura) {
+                let diferenca = faturaPagamento.valor - this.state.faturaCartao.valorFatura;
+
+                this.setState({
+                    buscarCategoriaCredito: diferenca < 0,
+                    buscarCategoriaDebito: diferenca > 0,
+                    valorDiferencaCredito: diferenca,
+                    valorDiferencaDebito: diferenca
+                });
+                Channel.emit('selectCategory', true);
             }
         }
-        this.setState({ aguardarAtualizacao: false, atualizarValorFatura: false });
+
     }
 
-    async confirmarAtualizacaoVencimento(){
+    async confirmarAtualizacaoVencimento() {
         this.setState({ aguardarAtualizacao: true });
         var isValid = true;
-        
+
         if (this.state.vencimentoFormatado === '') {
             alert('Informe uma data valida')
             isValid = false;
@@ -310,7 +330,7 @@ class FaturaCartao extends Component {
         if (isValid) {
             let vencimentoUS = this.state.vencimentoFormatado;
             let vencimentoBR = date.formatarDataBR(vencimentoUS);
-            var resposta = await FaturaCartaoService.updateDeadline(this.state.idFatura,vencimentoUS,vencimentoBR);
+            var resposta = await FaturaCartaoService.updateDeadline(this.state.idFatura, vencimentoUS, vencimentoBR);
             if (resposta.sucesso) {
                 alert(resposta.mensagem);
                 Channel.emit('lancamento:list', true);
@@ -321,190 +341,234 @@ class FaturaCartao extends Component {
         this.setState({ aguardarAtualizacao: false, atualizarVencimento: false });
     }
 
+    cancelarSelecaoCategoria() {
+        this.setState({
+            atualizarValorFatura: false,
+            aguardarAtualizacao: false,
+            buscarCategoriaCredito: false,
+            buscarCategoriaDebito: false
+        });
+    }
+
+    async confirmarSelecaoCategoria(categoriaCredito, categoriaDebito) {
+        var faturaPagamento = this.state.faturaCartaoPagamento;
+
+        if (categoriaCredito > 0 && categoriaDebito > 0) {
+            faturaPagamento.categoriaDifCredito = categoriaCredito;
+            faturaPagamento.categoriaDifDebito = categoriaDebito;
+            var resposta = await FaturaCartaoService.pay(faturaPagamento);
+            if (resposta.sucesso) {
+                alert(resposta.mensagem);
+                Channel.emit('lancamento:list', true);
+            } else {
+                alert('erro' + resposta.mensagem);
+            }
+        } else {
+            var resposta = await FaturaCartaoService.updateAmount(this.state.idFatura, faturaPagamento.valor, categoriaCredito, categoriaDebito);
+            if (resposta.sucesso) {
+                alert(resposta.mensagem);
+                Channel.emit('lancamento:list', true);
+            } else {
+                alert('erro' + resposta.mensagem);
+            }
+            this.setState({ aguardarAtualizacao: false, atualizarValorFatura: false });
+        }
+    }
+
+
     render() {
         const { state } = this;
         return (
-            <Modal show={this.state.show} onHide={this.handleClose} size="lg">
-                <Modal.Header closeButton className="bg-success text-white">
-                    <Modal.Title>
-                        Fatura de cartão ({state.faturaCartao.id})
+            <>
+                <ModalAlertCategoria
+                    credito={state.buscarCategoriaCredito}
+                    creditoDiferenca={state.valorDiferencaCredito}
+                    debito={state.buscarCategoriaDebito}
+                    debitoDiferenca={state.valorDiferencaDebito}
+                    onCancel={this.cancelarSelecaoCategoria}
+                    onConfirm={this.confirmarSelecaoCategoria} />
+                <Modal show={this.state.show} onHide={this.handleClose} size="lg">
+                    <Modal.Header closeButton className="bg-success text-white">
+                        <Modal.Title>
+                            Fatura de cartão ({state.faturaCartao.id})
                         </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Row>
-                        <Col sm={3} className="border-right">
-                            <h5 className="text-success">{state.faturaCartao.cartaoDeCredito.descricao}</h5>
-                            <span>{state.faturaCartao.cartaoDeCredito.bandeira}</span>
-                        </Col>
-                        <Col sm={4} className="border-right">
-                            <OverlayTrigger overlay={<Tooltip id="tooltip-informacao">Clique para atualilzar o vencimento</Tooltip>}>
-                                <h5 className="text-success" style={{ cursor: 'pointer', display: !state.atualizarVencimento ? 'block' : 'none' }} onClick={this.atualizarVencimento}>Vence em: {state.faturaCartao.vencimentoFormatado}</h5>
-                            </OverlayTrigger>
-                            <Row style={{ display: state.atualizarVencimento ? 'block' : 'none' }}>
-                                <Col sm={12}>
-                                    <ButtonGroup>
-                                        <Form.Control type="date" style={{ width: '200px' }} aria-describedby="vencimento" name="vencimento" value={state.vencimentoFormatado} onChange={this.handleChange} />
-                                        <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Confirmar</Tooltip>}>
-                                            <Button variant="success" size="sm" onClick={this.confirmarAtualizacaoVencimento} style={{ display: state.aguardarAtualizacao ? 'none' : 'block' }}><i className="material-icons md-12">check</i></Button>
-                                        </OverlayTrigger>
-                                        <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Cancelar</Tooltip>}>
-                                            <Button variant="danger" size="sm" onClick={this.cancelarAtualizacaoVencimento} style={{ display: state.aguardarAtualizacao ? 'none' : 'block' }}><i className="material-icons md-12">cancel</i></Button>
-                                        </OverlayTrigger>
-                                        <Button size="sm" variant="success" style={{ display: state.aguardarAtualizacao ? 'block' : 'none' }}>Aguarde...</Button>
-                                    </ButtonGroup>
-                                </Col>
-                            </Row>
-                            <span>Situação: ({state.faturaCartao.faturaPaga ? 'Paga' : 'Em aberto'})</span>
-                        </Col>
-                        <Col sm={5} className="border-right">
-                            <OverlayTrigger overlay={<Tooltip id="tooltip-informacao">Clique para atualilzar o valor da fatura</Tooltip>}>
-                                <h5 className="text-success" style={{ cursor: 'pointer', display: !state.atualizarValorFatura ? 'block' : 'none' }} onClick={this.atualizarFatura}>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Row>
+                            <Col sm={3} className="border-right">
+                                <h5 className="text-success">{state.faturaCartao.cartaoDeCredito.descricao}</h5>
+                                <span>{state.faturaCartao.cartaoDeCredito.bandeira}</span>
+                            </Col>
+                            <Col sm={4} className="border-right">
+                                <OverlayTrigger overlay={<Tooltip id="tooltip-informacao">Clique para atualilzar o vencimento</Tooltip>}>
+                                    <h5 className="text-success" style={{ cursor: 'pointer', display: !state.atualizarVencimento ? 'block' : 'none' }} onClick={this.atualizarVencimento}>Vence em: {state.faturaCartao.vencimentoFormatado}</h5>
+                                </OverlayTrigger>
+                                <Row style={{ display: state.atualizarVencimento ? 'block' : 'none' }}>
+                                    <Col sm={12}>
+                                        <ButtonGroup>
+                                            <Form.Control type="date" style={{ width: '200px' }} aria-describedby="vencimento" name="vencimento" value={state.vencimentoFormatado} onChange={this.handleChange} />
+                                            <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Confirmar</Tooltip>}>
+                                                <Button variant="success" size="sm" onClick={this.confirmarAtualizacaoVencimento} style={{ display: state.aguardarAtualizacao ? 'none' : 'block' }}><i className="material-icons md-12">check</i></Button>
+                                            </OverlayTrigger>
+                                            <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Cancelar</Tooltip>}>
+                                                <Button variant="danger" size="sm" onClick={this.cancelarAtualizacaoVencimento} style={{ display: state.aguardarAtualizacao ? 'none' : 'block' }}><i className="material-icons md-12">cancel</i></Button>
+                                            </OverlayTrigger>
+                                            <Button size="sm" variant="success" style={{ display: state.aguardarAtualizacao ? 'block' : 'none' }}>Aguarde...</Button>
+                                        </ButtonGroup>
+                                    </Col>
+                                </Row>
+                                <span>Situação: ({state.faturaCartao.faturaPaga ? 'Paga' : 'Em aberto'})</span>
+                            </Col>
+                            <Col sm={5} className="border-right">
+                                <OverlayTrigger overlay={<Tooltip id="tooltip-informacao">Clique para atualilzar o valor da fatura</Tooltip>}>
+                                    <h5 className="text-success" style={{ cursor: 'pointer', display: !state.atualizarValorFatura ? 'block' : 'none' }} onClick={this.atualizarFatura}>
+                                        {
+                                            new Intl.NumberFormat('pt-BR', {
+                                                style: 'currency',
+                                                currency: 'BRL'
+                                            }).format(state.faturaCartao.valorFatura)
+                                        }
+                                    </h5>
+                                </OverlayTrigger>
+                                <Row style={{ display: state.atualizarValorFatura ? 'block' : 'none' }}>
+                                    <Col sm={12}>
+                                        <ButtonGroup>
+                                            <Form.Control style={{ width: '200px' }} aria-describedby="valorTotalFatura" name="valorTotalFatura" value={state.valorPgtoFormatado} onChange={this.handleChange} />
+                                            <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Confirmar</Tooltip>}>
+                                                <Button variant="success" size="sm" onClick={this.confirmarAtualizacaoValorFatura} style={{ display: state.aguardarAtualizacao ? 'none' : 'block' }}><i className="material-icons md-12">check</i></Button>
+                                            </OverlayTrigger>
+                                            <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Cancelar</Tooltip>}>
+                                                <Button variant="danger" size="sm" onClick={this.cancelarAtualizacaoFatura} style={{ display: state.aguardarAtualizacao ? 'none' : 'block' }}><i className="material-icons md-12">cancel</i></Button>
+                                            </OverlayTrigger>
+                                            <Button size="sm" variant="success" style={{ display: state.aguardarAtualizacao ? 'block' : 'none' }}>Aguarde...</Button>
+                                        </ButtonGroup>
+                                    </Col>
+                                </Row>
+                                <span>Limite disponível:</span>
+                                <span className="ml-3">
                                     {
                                         new Intl.NumberFormat('pt-BR', {
                                             style: 'currency',
                                             currency: 'BRL'
-                                        }).format(state.faturaCartao.valorFatura)
+                                        }).format(state.limiteDisponivel)
                                     }
-                                </h5>
-                            </OverlayTrigger>
-                            <Row style={{ display: state.atualizarValorFatura ? 'block' : 'none' }}>
-                                <Col sm={12}>
-                                    <ButtonGroup>
-                                        <Form.Control style={{ width: '200px' }} aria-describedby="valorTotalFatura" name="valorTotalFatura" value={state.valorPgtoFormatado} onChange={this.handleChange} />
-                                        <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Confirmar</Tooltip>}>
-                                            <Button variant="success" size="sm" onClick={this.confirmarAtualizacaoValorFatura} style={{ display: state.aguardarAtualizacao ? 'none' : 'block' }}><i className="material-icons md-12">check</i></Button>
-                                        </OverlayTrigger>
-                                        <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Cancelar</Tooltip>}>
-                                            <Button variant="danger" size="sm" onClick={this.cancelarAtualizacaoFatura} style={{ display: state.aguardarAtualizacao ? 'none' : 'block' }}><i className="material-icons md-12">cancel</i></Button>
-                                        </OverlayTrigger>
-                                        <Button size="sm" variant="success" style={{ display: state.aguardarAtualizacao ? 'block' : 'none' }}>Aguarde...</Button>
-                                    </ButtonGroup>
-                                </Col>
-                            </Row>
-                            <span>Limite disponível:</span>
-                            <span className="ml-3">
-                                {
-                                    new Intl.NumberFormat('pt-BR', {
-                                        style: 'currency',
-                                        currency: 'BRL'
-                                    }).format(state.limiteDisponivel)
-                                }
-                            </span>
-                            <br />
-                            <span>Limite total:</span>
-                            <span className="ml-3">
-                                {
-                                    new Intl.NumberFormat('pt-BR', {
-                                        style: 'currency',
-                                        currency: 'BRL'
-                                    }).format(state.faturaCartao.cartaoDeCredito.limite)
-                                }
-                            </span>
-                        </Col >
-                    </Row>
-                    <hr />
-                    <Row>
-                        <Col>
-                            <Table striped bordered hover size="sm">
-                                <thead>
-                                    <tr>
-                                        <th>Data</th>
-                                        <th>Descrição</th>
-                                        <th>Valor</th>
-                                        <th style={state.faturaCartao.faturaPaga ? { display: 'none' } : {}}></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                                </span>
+                                <br />
+                                <span>Limite total:</span>
+                                <span className="ml-3">
                                     {
-                                        state.lancamentos.map(lcto =>
-                                            <tr key={lcto.id}>
-                                                <td>{lcto.dataCompetenciaFormatada}</td>
-                                                <td>{lcto.descricao + ' (' + (lcto.infoLancamento ? lcto.infoLancamento : '1 de 1') + ')'} </td>
-                                                <td>
-                                                    {
-                                                        new Intl.NumberFormat('pt-BR', {
-                                                            style: 'currency',
-                                                            currency: 'BRL'
-                                                        }).format(lcto.valor)
-                                                    }
-                                                </td>
-                                                <td style={{ display: state.faturaCartao.faturaPaga ? 'none' : 'block' }}>
-                                                    <ButtonGroup>
-                                                        <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Editar</Tooltip>}>
-                                                            <Button style={{ display: (lcto.podeAlterar ? 'block' : 'none') }} variant="primary" size="sm" onClick={() => this.getLancamento(lcto.id)}><i className="material-icons md-12">edit</i></Button>
-                                                        </OverlayTrigger>
-                                                        <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Excluir</Tooltip>}>
-                                                            <Button style={{ display: (lcto.podeExcluir ? 'block' : 'none') }} variant="danger" size="sm" onClick={() => this.handleRemove(lcto.id)}><i className="material-icons md-12">delete</i></Button>
-                                                        </OverlayTrigger>
-                                                    </ButtonGroup>
-                                                </td>
-                                            </tr>
-                                        )
+                                        new Intl.NumberFormat('pt-BR', {
+                                            style: 'currency',
+                                            currency: 'BRL'
+                                        }).format(state.faturaCartao.cartaoDeCredito.limite)
                                     }
-                                </tbody>
-                            </Table>
-                        </Col>
-                    </Row>
-                    <Row style={{ display: state.pagamento.pagarTotal || state.pagamento.pagarParcial ? 'block' : 'none' }}>
+                                </span>
+                            </Col >
+                        </Row>
                         <hr />
-                        <label style={{ display: state.mensagemValidacao != '' ? 'block' : 'none' }} className="font-weight-bold text-danger ml-4">{state.mensagemValidacao}</label>
-                        <Form>
-                            <Form.Row>
-                                <Col md={4}>
-                                    <Form.Group controlId="dataVencimento">
-                                        <Form.Label>Dt. Pagamento</Form.Label>
-                                        <InputGroup>
-                                            <InputGroup.Prepend>
-                                                <InputGroup.Text id="dataVencimento">
-                                                    <i className="material-icons md-18 mr-2">date_range</i>
-                                                </InputGroup.Text>
-                                            </InputGroup.Prepend>
-                                            <Form.Control style={{ width: '150px' }} type="date" placeholder="__/__/____" aria-describedby="dataVencimento" name="dataVencimento" value={state.faturaCartaoPagamento.dataPagamento} onChange={this.handleChange} />
-                                        </InputGroup>
-                                    </Form.Group>
-                                </Col>
-                                <Col md={3}>
-                                    <Form.Group controlId="carteiraId">
-                                        <Form.Label>Escolha a conta</Form.Label>
-                                        <Form.Control id="carteiraId" name="carteiraId" as="select" onChange={this.handleChange}>
-                                            <option value="0">Selecione...</option>
-                                            {
-                                                state.pagamento.carteiras.map(cart =>
-                                                    <option key={cart.id} value={cart.id} selected={state.pagamento.carteiraId == cart.id ? 'selected' : ''}>{cart.descricao}</option>
-                                                )
-                                            }
-                                        </Form.Control>
-                                    </Form.Group>
-                                </Col>
-                                <Col md={3}>
-                                    <Form.Group controlId="valorFatura" style={{ display: state.pagamento.pagarParcial ? 'block' : 'none' }}>
-                                        <Form.Label>Valor</Form.Label>
-                                        <InputGroup>
-                                            <InputGroup.Prepend>
-                                                <InputGroup.Text id="valorFatura">
-                                                    <i className="material-icons md-18 mr-2">money</i>
-                                                </InputGroup.Text>
-                                            </InputGroup.Prepend>
-                                            <Form.Control aria-describedby="valorFatura" name="valorFatura" value={state.valorPgtoFormatado} onChange={this.handleChange} />
-                                        </InputGroup>
-                                    </Form.Group>
-                                </Col>
-                            </Form.Row>
-                            <Form.Row>
-                                <Col md={4}>
-                                    <Button variant="success" onClick={this.pagarFatura}>Confirmar</Button>
-                                    <Button variant="danger" className="ml-2" onClick={this.cancelarPagamento}>Cancelar</Button>
-                                </Col>
-                            </Form.Row>
-                        </Form>
-                    </Row>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={this.handleClose}>Fechar</Button>
-                    <Button variant="primary" style={{ display: state.faturaCartao.faturaPaga ? 'none' : 'block' }} onClick={() => this.iniciarPagamento(true)}>Pagar parcial</Button>
-                    <Button variant="success" style={{ display: state.faturaCartao.faturaPaga ? 'none' : 'block' }} onClick={() => this.iniciarPagamento(false)}>Pagar total</Button>
-                </Modal.Footer>
-            </Modal>
+                        <Row>
+                            <Col>
+                                <Table striped bordered hover size="sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Descrição</th>
+                                            <th>Valor</th>
+                                            <th style={state.faturaCartao.faturaPaga ? { display: 'none' } : {}}></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {
+                                            state.lancamentos.map(lcto =>
+                                                <tr key={lcto.id}>
+                                                    <td>{lcto.dataCompetenciaFormatada}</td>
+                                                    <td>{lcto.descricao + ' (' + (lcto.infoLancamento ? lcto.infoLancamento : '1 de 1') + ')'} </td>
+                                                    <td>
+                                                        {
+                                                            new Intl.NumberFormat('pt-BR', {
+                                                                style: 'currency',
+                                                                currency: 'BRL'
+                                                            }).format(lcto.valor)
+                                                        }
+                                                    </td>
+                                                    <td style={{ display: state.faturaCartao.faturaPaga ? 'none' : 'block' }}>
+                                                        <ButtonGroup>
+                                                            <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Editar</Tooltip>}>
+                                                                <Button style={{ display: (lcto.podeAlterar ? 'block' : 'none') }} variant="primary" size="sm" onClick={() => this.getLancamento(lcto.id)}><i className="material-icons md-12">edit</i></Button>
+                                                            </OverlayTrigger>
+                                                            <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Excluir</Tooltip>}>
+                                                                <Button style={{ display: (lcto.podeExcluir ? 'block' : 'none') }} variant="danger" size="sm" onClick={() => this.handleRemove(lcto.id)}><i className="material-icons md-12">delete</i></Button>
+                                                            </OverlayTrigger>
+                                                        </ButtonGroup>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        }
+                                    </tbody>
+                                </Table>
+                            </Col>
+                        </Row>
+                        <Row style={{ display: state.pagamento.pagarTotal || state.pagamento.pagarParcial ? 'block' : 'none' }}>
+                            <hr />
+                            <label style={{ display: state.mensagemValidacao != '' ? 'block' : 'none' }} className="font-weight-bold text-danger ml-4">{state.mensagemValidacao}</label>
+                            <Form>
+                                <Form.Row>
+                                    <Col md={4}>
+                                        <Form.Group controlId="dataVencimento">
+                                            <Form.Label>Dt. Pagamento</Form.Label>
+                                            <InputGroup>
+                                                <InputGroup.Prepend>
+                                                    <InputGroup.Text id="dataVencimento">
+                                                        <i className="material-icons md-18 mr-2">date_range</i>
+                                                    </InputGroup.Text>
+                                                </InputGroup.Prepend>
+                                                <Form.Control style={{ width: '150px' }} type="date" placeholder="__/__/____" aria-describedby="dataVencimento" name="dataVencimento" value={state.faturaCartaoPagamento.dataPagamento} onChange={this.handleChange} />
+                                            </InputGroup>
+                                        </Form.Group>
+                                    </Col>
+                                    <Col md={3}>
+                                        <Form.Group controlId="carteiraId">
+                                            <Form.Label>Escolha a conta</Form.Label>
+                                            <Form.Control id="carteiraId" name="carteiraId" as="select" onChange={this.handleChange}>
+                                                <option value="0">Selecione...</option>
+                                                {
+                                                    state.pagamento.carteiras.map(cart =>
+                                                        <option key={cart.id} value={cart.id} selected={state.pagamento.carteiraId == cart.id ? 'selected' : ''}>{cart.descricao}</option>
+                                                    )
+                                                }
+                                            </Form.Control>
+                                        </Form.Group>
+                                    </Col>
+                                    <Col md={3}>
+                                        <Form.Group controlId="valorFatura" style={{ display: state.pagamento.pagarParcial ? 'block' : 'none' }}>
+                                            <Form.Label>Valor</Form.Label>
+                                            <InputGroup>
+                                                <InputGroup.Prepend>
+                                                    <InputGroup.Text id="valorFatura">
+                                                        <i className="material-icons md-18 mr-2">money</i>
+                                                    </InputGroup.Text>
+                                                </InputGroup.Prepend>
+                                                <Form.Control aria-describedby="valorFatura" name="valorFatura" value={state.valorPgtoFormatado} onChange={this.handleChange} />
+                                            </InputGroup>
+                                        </Form.Group>
+                                    </Col>
+                                </Form.Row>
+                                <Form.Row>
+                                    <Col md={4}>
+                                        <Button variant="success" onClick={this.pagarFatura}>Confirmar</Button>
+                                        <Button variant="danger" className="ml-2" onClick={this.cancelarPagamento}>Cancelar</Button>
+                                    </Col>
+                                </Form.Row>
+                            </Form>
+                        </Row>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={this.handleClose}>Fechar</Button>
+                        <Button variant="primary" style={{ display: state.faturaCartao.faturaPaga ? 'none' : 'block' }} onClick={() => this.iniciarPagamento(true)}>Pagar parcial</Button>
+                        <Button variant="success" style={{ display: state.faturaCartao.faturaPaga ? 'none' : 'block' }} onClick={() => this.iniciarPagamento(false)}>Pagar total</Button>
+                    </Modal.Footer>
+                </Modal>
+            </>
         )
     }
 }

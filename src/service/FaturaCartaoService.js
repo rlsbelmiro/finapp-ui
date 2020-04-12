@@ -12,10 +12,12 @@ export const FaturaCartaoService = {
     pay(faturaPagamento){
         return ApiService.post(endpoint + '/pagarFatura',faturaPagamento);
     },
-    updateAmount(faturaId, valor){
+    updateAmount(faturaId, valor, categoriaCredito, categoriaDebito){
         var fatura = {
             id: faturaId,
-            valorFatura: valor
+            valorFatura: valor,
+            categoriaDifCredito: categoriaCredito,
+            categoriaDifDebito: categoriaDebito
         }
 
         return ApiService.post(endpoint + '/atualizarValor',fatura);
