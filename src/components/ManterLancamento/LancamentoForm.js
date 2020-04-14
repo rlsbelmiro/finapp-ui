@@ -296,6 +296,10 @@ class LancamentoForm extends Component {
                 let valor = monetario.formatarMoeda(value);
                 this.state.valorEntrada = valor;
                 this.state.valorParcela = monetario.parseDecimal(valor);
+                if (lancamento.qtdParcelas > 0 && !lancamento.parcelamentoFixo) {
+                    this.state.valorParcela = monetario.parseDecimal(valor) / lancamento.qtdParcelas;
+                }
+
                 break;
             case "carteiraId":
                 lancamento.carteiraId = value;
@@ -364,7 +368,11 @@ class LancamentoForm extends Component {
         } else if (target.name === "parcelamentoFixo") {
             const { lancamento } = this.state;
             lancamento.parcelamentoFixo = target.checked;
-            this.setState({ lancamento: lancamento });
+            let valorParcela = monetario.parseDecimal(this.state.valorEntrada);
+            if(!lancamento.parcelamentoFixo && lancamento.qtdParcelas > 1){
+                valorParcela = valorParcela / lancamento.qtdParcelas;
+            }
+            this.setState({ lancamento: lancamento, valorParcela: valorParcela });
         } else if (target.name === "isRateio") {
             var categorias = new Array();
             if (target.checked) {
@@ -515,8 +523,9 @@ class LancamentoForm extends Component {
     obterTotal() {
         const { state } = this;
         var total = 0;
+        let tipo = state.lancamento.tipo == "DEBITO" ? "CREDITO" : "DEBITO";
 
-        state.categoriasRateio.forEach(c => total += c.tipo === "DEBITO" ? c.valor * -1 : c.valor);
+        state.categoriasRateio.forEach(c => total += c.tipo === tipo ? c.valor * -1 : c.valor);
 
         return total;
     }
