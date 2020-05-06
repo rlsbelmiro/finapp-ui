@@ -1,8 +1,40 @@
 import React, { Component } from 'react'
 import Navbar from 'react-bootstrap/Navbar'
-import Nav from 'react-bootstrap/Nav'
+import MenuConteudo from './MenuConteudo';
+import { isLogged } from '../Commons/Auth';
+import { Channel } from '../../service/EventService';
 
 class MenuPrincipal extends Component {
+    constructor(props){
+        super(props);
+
+        this.sair = this.sair.bind(this);
+        this.validarAcessos = this.validarAcessos.bind(this);
+
+        this.state = {
+            usuarioLogado: isLogged()
+        }
+    }
+
+    componentDidMount(){
+        Channel.on('login',this.validarAcessos);
+    }
+
+    componentWillUnmount(){
+        Channel.removeListener('login',this.validarAcessos);
+    }
+
+    validarAcessos(){
+        this.setState({usuarioLogado: isLogged()});
+    }
+
+    sair(){
+        if(isLogged()){
+            localStorage.removeItem('token');
+            Channel.emit('login',false);
+            this.props.history.push("/");
+        }
+    }
 
     render() {
         return (
@@ -10,17 +42,12 @@ class MenuPrincipal extends Component {
                 <Navbar.Brand href="#home">FinApp - Finanças</Navbar.Brand>
                 <Navbar.Toggle aria-controls="menuConteudo" />
                 <Navbar.Collapse id="menuConteudo">
-                    <Nav className="mr-auto">
-                        <Nav.Link className="nav-link text-white border-right hover-conteudo" href="#home">Vendas</Nav.Link>
-                        <Nav.Link className="nav-link text-white border-right hover-conteudo" href="#home">Financeiro</Nav.Link>
-                        <Nav.Link className="nav-link text-white border-right hover-conteudo" href="#home">Cadastros</Nav.Link>
-                    </Nav>
+                    <MenuConteudo  />
                 </Navbar.Collapse>
-                <div>
-                    <a href=""><i className="material-icons md-36 md-light">fiber_new</i></a>
-                    <a href=""><i className="material-icons md-36 md-light">notifications</i></a>
-                    <a href=""><i className="material-icons md-36 md-light">account_circle</i></a>
-                </div>
+                <a className="nav-link text-white hover-conteudo" href="#" onClick={this.sair} style={{display: this.state.usuarioLogado ? '' : 'none'}}>
+                    <i className="material-icons md-18 mr-2">settings_power</i>
+                    <span className="h6 align-top">Sair</span>
+                </a>
             </Navbar>
         )
     }

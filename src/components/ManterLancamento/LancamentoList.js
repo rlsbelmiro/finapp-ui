@@ -12,7 +12,7 @@ import CardDeck from 'react-bootstrap/CardDeck'
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 
-import {Channel} from '../../service/EventService';
+import { Channel } from '../../service/EventService';
 
 
 class LancamentoList extends Component {
@@ -65,50 +65,50 @@ class LancamentoList extends Component {
     }
 
     async componentDidMount() {
-        if(!this.props.carregarSomentePesquisa){
+        if (!this.props.carregarSomentePesquisa) {
             this.carregarLancamentos();
         } else {
             this.searchList(this.props.filtro);
         }
-        Channel.on('lancamento:list',this.carregarLancamentos);
-        Channel.on('lancamento:search',this.searchList);
-        Channel.on('lancamento:delete',this.handleRemove);
-        Channel.on('lancamento:agrupar',this.agruparCartao);
+        Channel.on('lancamento:list', this.carregarLancamentos);
+        Channel.on('lancamento:search', this.searchList);
+        Channel.on('lancamento:delete', this.handleRemove);
+        Channel.on('lancamento:agrupar', this.agruparCartao);
     }
 
-    componentWillUnmount(){
-        Channel.removeListener('lancamento:list',this.carregarLancamentos);
-        Channel.removeListener('lancamento:search',this.searchList);
-        Channel.removeListener('lancamento:delete',this.handleRemove);
-        Channel.removeListener('lancamento:agrupar',this.agruparCartao);
+    componentWillUnmount() {
+        Channel.removeListener('lancamento:list', this.carregarLancamentos);
+        Channel.removeListener('lancamento:search', this.searchList);
+        Channel.removeListener('lancamento:delete', this.handleRemove);
+        Channel.removeListener('lancamento:agrupar', this.agruparCartao);
     }
 
-    async searchList(filtro){
-        this.setState({aguardar: true});
+    async searchList(filtro) {
+        this.setState({ aguardar: true });
         var resposta = await LancamentoService.pesquisar(filtro);
-        if(resposta.sucesso){
+        if (resposta.sucesso) {
             this.setState({
                 lancamentos: resposta.objeto,
                 aguardar: false
             })
-        }else{
+        } else {
             this.setState({
                 aguardar: false,
                 erro: true,
                 mensagem: resposta.mensagem
             })
         }
-        
+
     }
 
 
-    async carregarLancamentos(reload){
-        if(!reload){
-            this.setState({aguardar: true});
+    async carregarLancamentos(reload) {
+        if (!reload) {
+            this.setState({ aguardar: true });
         }
         const lancamentos = await LancamentoService.list();
 
-        if (lancamentos) {
+        if (lancamentos.sucesso) {
             this.setState({
                 lancamentos: lancamentos,
                 aguardar: false
@@ -132,7 +132,7 @@ class LancamentoList extends Component {
         });
     }
 
-    handleCancelarPagamento(id){
+    handleCancelarPagamento(id) {
         this.setState({
             excluir: false,
             cancelarPagamento: true,
@@ -178,20 +178,20 @@ class LancamentoList extends Component {
         return total;
     }
 
-    getLancamento(id){
-        Channel.emit('lancamento:edit',id);
+    getLancamento(id) {
+        Channel.emit('lancamento:edit', id);
     }
 
-    pagarLancamento(id, faturaCartaoId){
-        if(faturaCartaoId > 0){
+    pagarLancamento(id, faturaCartaoId) {
+        if (faturaCartaoId > 0) {
             this.visualizarFatura(faturaCartaoId);
         } else {
-            Channel.emit('lancamento:pay',id);
+            Channel.emit('lancamento:pay', id);
         }
     }
 
-    visualizarFatura(id){
-        Channel.emit('faturaCartao:view',id);
+    visualizarFatura(id) {
+        Channel.emit('faturaCartao:view', id);
     }
 
     async onRemove(lancamentoId) {
@@ -207,7 +207,7 @@ class LancamentoList extends Component {
         if (retorno.sucesso) {
             lancamentos.splice(lancamentoIndex, 1);
             this.setState({ lancamentos: lancamentos, excluir: false, erro: false, alerta: false });
-            Channel.emit('lancamento:list',true);
+            Channel.emit('lancamento:list', true);
         } else {
             this.setState({
                 excluir: false,
@@ -219,7 +219,7 @@ class LancamentoList extends Component {
         }
     }
 
-    async onCancelarPagamento(id){
+    async onCancelarPagamento(id) {
         var retorno = await LancamentoService.cancelPay(id);
         if (retorno.sucesso) {
             this.setState({ excluir: false, erro: false, alerta: false, cancelarPagamento: false });
@@ -236,11 +236,11 @@ class LancamentoList extends Component {
         }
     }
 
-    async agruparCartao(checked){
-        this.setState({aguardar: true});
-        var resposta = await LancamentoService.agruparCartao(checked,this.state.lancamentos,this.state.lancamentosAgrupados);
+    async agruparCartao(checked) {
+        this.setState({ aguardar: true });
+        var resposta = await LancamentoService.agruparCartao(checked, this.state.lancamentos, this.state.lancamentosAgrupados);
 
-        if(resposta.sucesso){
+        if (resposta.sucesso) {
             var lancamentos = resposta.objeto.listaAgrupar;
             var agrupados = resposta.objeto.itensAgrupados;
             this.setState({
@@ -249,12 +249,12 @@ class LancamentoList extends Component {
                 lancamentosAgrupados: agrupados
             });
 
-            
+
         }
-        
+
     }
 
-    
+
     render() {
         const { state, props } = this;
         return (
@@ -264,47 +264,47 @@ class LancamentoList extends Component {
                     <Table striped bordered hover size="sm">
                         <thead>
                             <tr>
-                                <th style={{display: props.exibirCheckbox ? '' : 'none'}}>
+                                <th style={{ display: props.exibirCheckbox ? '' : 'none' }}>
                                     <div className="custom-control custom-checkbox mr-sm-2">
                                         <input type="checkbox" className="custom-control-input" id="customControlAutosizing" />
                                         <label className="custom-control-label" htmlFor="customControlAutosizing"></label>
                                     </div>
                                 </th>
-                                <th style={{display: props.exibirId ? '' : 'none'}}>Id</th>
-                                <th style={{display: props.exibirDescricao ? '' : 'none'}}>Descrição</th>
-                                <th style={{display: props.exibirEmissao ? '' : 'none'}}>Emissão</th>
-                                <th style={{display: props.exibirConta ? '' : 'none'}}>Conta\Cartão</th>
-                                <th style={{display: props.exibirFavorecido ? '' : 'none'}}>Favorecido</th>
-                                <th style={{display: props.exibirVencimento ? '' : 'none'}}>Vencimento</th>
-                                <th style={{display: props.exibirSituacao ? '' : 'none'}}>Situação</th>
-                                <th style={{display: props.exibirValor ? '' : 'none'}}>Valor</th>
-                                <th style={{display: props.exibirParcelamento ? '' : 'none'}}>Parcelamento</th>
-                                <th style={{display: props.exibirAcoes ? '' : 'none'}}>Ações</th>
+                                <th style={{ display: props.exibirId ? '' : 'none' }}>Id</th>
+                                <th style={{ display: props.exibirDescricao ? '' : 'none' }}>Descrição</th>
+                                <th style={{ display: props.exibirEmissao ? '' : 'none' }}>Emissão</th>
+                                <th style={{ display: props.exibirConta ? '' : 'none' }}>Conta\Cartão</th>
+                                <th style={{ display: props.exibirFavorecido ? '' : 'none' }}>Favorecido</th>
+                                <th style={{ display: props.exibirVencimento ? '' : 'none' }}>Vencimento</th>
+                                <th style={{ display: props.exibirSituacao ? '' : 'none' }}>Situação</th>
+                                <th style={{ display: props.exibirValor ? '' : 'none' }}>Valor</th>
+                                <th style={{ display: props.exibirParcelamento ? '' : 'none' }}>Parcelamento</th>
+                                <th style={{ display: props.exibirAcoes ? '' : 'none' }}>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             {
                                 state.lancamentos.map(lcto =>
                                     <tr className={lcto.tipo === 'CREDITO' ? 'text-success' : 'text-danger'} key={lcto.id}>
-                                        <td style={{display: props.exibirCheckbox ? '' : 'none'}}>
+                                        <td style={{ display: props.exibirCheckbox ? '' : 'none' }}>
                                             <div className="custom-control custom-checkbox mr-sm-2">
                                                 <input type="checkbox" className="custom-control-input" id="customControlAutosizing1" />
                                                 <label className="custom-control-label" htmlFor="customControlAutosizing1"></label>
                                             </div>
                                         </td>
-                                        <td style={{display: props.exibirId ? '' : 'none'}}>{lcto.id}</td>
-                                        <td style={{display: props.exibirDescricao ? '' : 'none'}}>{lcto.descricao}</td>
-                                        <td style={{display: props.exibirEmissao ? '' : 'none'}}>
+                                        <td style={{ display: props.exibirId ? '' : 'none' }}>{lcto.id}</td>
+                                        <td style={{ display: props.exibirDescricao ? '' : 'none' }}>{lcto.descricao}</td>
+                                        <td style={{ display: props.exibirEmissao ? '' : 'none' }}>
                                             {lcto.dataCompetenciaFormatada}
-                                            
+
                                         </td>
-                                        <td style={{display: props.exibirConta ? '' : 'none'}}>{!lcto.cartaoDeCredito.descricao ? 'Conta: ' + lcto.carteira.descricao : 'Cartão: ' + lcto.cartaoDeCredito.descricao}</td>
-                                        <td style={{display: props.exibirFavorecido ? '' : 'none'}}>{lcto.pessoa.nome}</td>
-                                        <td style={{display: props.exibirVencimento ? '' : 'none'}}>
+                                        <td style={{ display: props.exibirConta ? '' : 'none' }}>{!lcto.cartaoDeCredito.descricao ? 'Conta: ' + lcto.carteira.descricao : 'Cartão: ' + lcto.cartaoDeCredito.descricao}</td>
+                                        <td style={{ display: props.exibirFavorecido ? '' : 'none' }}>{lcto.pessoa.nome}</td>
+                                        <td style={{ display: props.exibirVencimento ? '' : 'none' }}>
                                             {lcto.dataVencimentoFormatada}
                                         </td>
-                                        <td style={{display: props.exibirSituacao ? '' : 'none'}}>{lcto.situacao}</td>
-                                        <td style={{display: props.exibirValor ? '' : 'none'}}>
+                                        <td style={{ display: props.exibirSituacao ? '' : 'none' }}>{lcto.situacao}</td>
+                                        <td style={{ display: props.exibirValor ? '' : 'none' }}>
                                             {
                                                 new Intl.NumberFormat('pt-BR', {
                                                     style: 'currency',
@@ -312,10 +312,10 @@ class LancamentoList extends Component {
                                                 }).format(lcto.valor)
                                             }
                                         </td>
-                                        <td style={{display: props.exibirParcelamento ? '' : 'none'}}>
+                                        <td style={{ display: props.exibirParcelamento ? '' : 'none' }}>
                                             {lcto.infoLancamento ? lcto.infoLancamento : '1 de 1'}
                                         </td>
-                                        <td style={{display: props.exibirAcoes ? '' : 'none'}}>
+                                        <td style={{ display: props.exibirAcoes ? '' : 'none' }}>
                                             <ButtonGroup>
                                                 <OverlayTrigger overlay={<Tooltip id="tooltip-view">Visualizar detalhes</Tooltip>}>
                                                     <Button style={{ display: (!lcto.podeAlterar ? 'inline' : 'none') }} variant="primary" size="sm" onClick={() => this.getLancamento(lcto.id)}><i className="material-icons md-12">visibility</i></Button>
@@ -347,8 +347,8 @@ class LancamentoList extends Component {
                         </tbody>
                     </Table>
 
-                    <Row style={{display: this.props.exibirResumo ? 'block' : 'none'}}>
-                        <Col md={{ span: 8, offset: 4}}>
+                    <Row style={{ display: this.props.exibirResumo ? 'block' : 'none' }}>
+                        <Col md={{ span: 8, offset: 4 }}>
                             <CardDeck>
                                 <Card border="success" text="success" style={{ width: "200px" }}>
                                     <Card.Header>Total receitas</Card.Header>

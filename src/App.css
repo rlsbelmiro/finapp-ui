@@ -89,3 +89,23 @@ a.hover-conteudo:hover{
     text-decoration: underline;
     width: 100%;
 }
+
+#divLogin{
+    margin: 0 auto;
+    height: 100%;
+    width: 600px;
+    margin-top: 20px;
+    
+}
+
+#divLogin form{
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0px 4px rgba(0, 0, 0, 0.54);
+}
+
+#divLogin form .form-control{
+    padding: 5px 10px !important;
+}
