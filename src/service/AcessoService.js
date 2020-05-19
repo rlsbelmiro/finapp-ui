@@ -1,13 +1,13 @@
 import { ApiService } from './ApiService'
 
-const endpoint = 'acesso';
+const endpoint = 'account';
 
 export const AcessoService = {
-    autenticar(login,senha){
+    autenticar(login, password) {
         let data = {
             login: login,
-            senha: senha
+            password: password
         };
-        return ApiService.postForm(endpoint + '/autenticar',data);
+        return ApiService.post(endpoint + '/login', data);
     }
 }

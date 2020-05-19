@@ -1,4 +1,4 @@
-const api = 'http://localhost:8080/finapp-api/rest/';
+const api = 'https://localhost:44399/api/';
 const getToken = () => {
     return "Bearer " + localStorage.getItem('token');
 };
@@ -11,6 +11,8 @@ export const ApiService = {
             }
         }).then(
             response => response.json()
+        ).catch(
+            alert('erro ao fazer requisição ajax')
         )
     },
     getById(endpoint, id) {
@@ -20,6 +22,8 @@ export const ApiService = {
             }
         }).then(
             response => response.json()
+        ).catch(
+            alert('erro ao fazer requisição ajax')
         )
     },
     post(endpoint, data) {
@@ -33,6 +37,8 @@ export const ApiService = {
             body: JSON.stringify(data)
         }).then(
             response => response.json()
+        ).catch(
+            alert('erro ao fazer requisição ajax')
         )
     },
     delete(endpoint, id) {
@@ -43,6 +49,8 @@ export const ApiService = {
             method: "DELETE"
         }).then(
             response => response.json()
+        ).catch(
+            alert('erro ao fazer requisição ajax')
         )
     },
     put(endpoint, data, id) {
@@ -56,6 +64,8 @@ export const ApiService = {
             body: JSON.stringify(data)
         }).then(
             response => response.json()
+        ).catch(
+            alert('erro ao fazer requisição ajax')
         )
     },
     postForm(endpoint, data) {
@@ -74,6 +84,8 @@ export const ApiService = {
             body: formBody
         }).then(
             response => response.json()
+        ).catch(
+            alert('erro ao fazer requisição ajax')
         )
     }
 }

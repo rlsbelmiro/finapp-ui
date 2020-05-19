@@ -1,39 +1,39 @@
 import { ApiService } from './ApiService'
 
-const endpoint = 'lancamentos';
+const endpoint = 'documents';
 
 export const LancamentoService = {
-    list(){
-        return ApiService.get(endpoint  + '/mesAtual');
+    list() {
+        return ApiService.get(endpoint + '/mesAtual');
     },
-    get(id){
-        return ApiService.getById(endpoint,id);
+    get(id) {
+        return ApiService.getById(endpoint, id);
     },
-    getFiltros(){
-        return ApiService.get(endpoint + '/getFiltros');
+    getFiltros() {
+        return ApiService.get(endpoint + '/filters');
     },
-    getPorFatura(faturaId){
+    getPorFatura(faturaId) {
         return ApiService.get(endpoint + '/faturaCartao/' + faturaId);
     },
-    create(lancamento){
-        return ApiService.post(endpoint + '/salvar',lancamento);
+    create(lancamento) {
+        return ApiService.post(endpoint + '/salvar', lancamento);
     },
-    remove(id){
-        return ApiService.delete(endpoint,id);
+    remove(id) {
+        return ApiService.delete(endpoint, id);
     },
-    edit(lancamento,id){
-        return ApiService.put(endpoint + '/salvar',lancamento,id);
+    edit(lancamento, id) {
+        return ApiService.put(endpoint + '/salvar', lancamento, id);
     },
-    pay(lancamento){
-        return ApiService.post(endpoint + '/pagar',lancamento);
+    pay(lancamento) {
+        return ApiService.post(endpoint + '/pagar', lancamento);
     },
-    cancelPay(lancamento){
+    cancelPay(lancamento) {
         return ApiService.get(endpoint + '/cancelarPagamento/' + lancamento);
     },
-    pesquisar(filtro){
-        return ApiService.post(endpoint + '/pesquisar',filtro);
+    pesquisar(filtro) {
+        return ApiService.post(endpoint + '/pesquisar', filtro);
     },
-    agruparCartao(isAgrupar, lancamentos, agrupados){
+    agruparCartao(isAgrupar, lancamentos, agrupados) {
         var filtro = {
             agruparCartao: isAgrupar,
             listaAgrupar: lancamentos,

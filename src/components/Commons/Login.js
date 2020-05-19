@@ -16,36 +16,37 @@ class Login extends Component {
 
         this.state = {
             login: "",
-            senha: "",
-            mensagem: ""
+            password: "",
+            message: ""
         }
 
     }
 
-    handleChange(event){
+    handleChange(event) {
         const { target } = event;
-        switch(target.name){
+        switch (target.name) {
             case "email":
-                this.setState({login: target.value});
+                this.setState({ login: target.value });
                 break;
-            case "senha":
-                this.setState({senha: target.value});
+            case "password":
+                this.setState({ password: target.value });
                 break;
         }
     }
 
-    async autenticar(){
-        this.setState({mensagem: ""});
+    async autenticar() {
+        this.setState({ mensagem: "" });
         const { state } = this;
-        var resposta = await AcessoService.autenticar(state.login,state.senha);
-        if(resposta.sucesso){
-            localStorage.setItem('token',resposta.objeto.tokenAcesso);
-            Channel.emit('login',true);
+        var resposta = await AcessoService.autenticar(state.login, state.password);
+        alert(JSON.stringify(resposta));
+        if (resposta.success) {
+            localStorage.setItem('token', resposta.data.tokenAcesso);
+            Channel.emit('login', true);
             this.props.history.push("/lancamentos");
         } else {
-            this.setState({mensagem: resposta.mensagem});
+            this.setState({ message: resposta.message });
         }
-        
+
 
     }
 
@@ -66,21 +67,21 @@ class Login extends Component {
                     </Form.Row>
                     <Form.Row>
                         <Col>
-                            <Form.Group controlId="senha">
+                            <Form.Group controlId="password">
                                 <Form.Label>Senha</Form.Label>
-                                <Form.Control type="password" id="senha" placeholder="Senha" name="senha" defaultValue={state.senha} onChange={this.handleChange} />
+                                <Form.Control type="password" id="password" placeholder="Senha" name="password" defaultValue={state.password} onChange={this.handleChange} />
                             </Form.Group>
                         </Col>
                     </Form.Row>
-                    <h3 className="text-danger" style={{display: state.mensagem != "" ? '' : 'none'}}>{state.mensagem}</h3>
+                    <h3 className="text-danger" style={{ display: state.message != "" ? '' : 'none' }}>{state.message}</h3>
                     <Form.Row>
                         <Col>
-                            <a  href="#">Esqueci minha senha</a>
+                            <a href="#">Esqueci minha senha</a>
                             <Button className="ml-3" variant="success" onClick={this.autenticar}>Login</Button>
                         </Col>
                     </Form.Row>
                 </Form>
-                <Button className="mt-4 p-2" style={{width: "100%", fontSize: "18px"}} variant="info">Quero me cadastrar</Button>
+                <Button className="mt-4 p-2" style={{ width: "100%", fontSize: "18px" }} variant="info">Quero me cadastrar</Button>
             </div>
         )
     }
