@@ -6,9 +6,9 @@ export function getPeriodosFluxoCaixa(qtd, tipoPeriodo, dataInicial) {
     var periodos = new Array();
     var periodoInicio = new Date();
     periodoInicio.setDate(1);
-    if(dataInicial)
+    if (dataInicial)
         periodoInicio = dataInicial;
-    
+
     let soma = getSomaPeriodo(tipoPeriodo);
     let mesFimPrimeiroPeriodo = soma === 1 ? periodoInicio.getMonth() : periodoInicio.getMonth() + (soma - 1);
     var periodoFim = new Date(periodoInicio.getFullYear(), mesFimPrimeiroPeriodo, getUltimoDiaMes(mesFimPrimeiroPeriodo));
@@ -19,7 +19,7 @@ export function getPeriodosFluxoCaixa(qtd, tipoPeriodo, dataInicial) {
             fluxoCaixa: 0,
             periodoInicio: Intl.DateTimeFormat("pt-BR").format(periodoInicio),
             periodoFim: Intl.DateTimeFormat("pt-BR").format(periodoFim),
-            label: getNomePeriodo(periodoInicio.getMonth(), periodoInicio.getFullYear(),tipoPeriodo)
+            label: getNomePeriodo(periodoInicio.getMonth(), periodoInicio.getFullYear(), tipoPeriodo)
         });
 
         periodoFim.setMonth(periodoFim.getMonth() + soma, getUltimoDiaMes(periodoFim.getMonth() + soma));
@@ -58,8 +58,56 @@ export function formatarDataIngles(dataString) {
 export function formatarDataBR(dataString) {
     if (dataString == null)
         return '';
+
+    var index = dataString.indexOf('T');
+    if (index > -1) {
+        dataString = dataString.substring(0, index);
+    }
     var data = dataString.split('-')
     return data[2] + '/' + data[1] + '/' + data[0];
+}
+
+export function getDescricaoMes(mes, ano) {
+    let retorno = "";
+    switch (mes) {
+        case 1:
+            retorno = "Janeiro " + ano;
+            break;
+        case 2:
+            retorno = "Fevereiro " + ano;
+            break;
+        case 3:
+            retorno = "Março " + ano;
+            break;
+        case 4:
+            retorno = "Abril " + ano;
+            break;
+        case 5:
+            retorno = "Maio " + ano;
+            break;
+        case 6:
+            retorno = "Junho " + ano;
+            break;
+        case 7:
+            retorno = "Julho " + ano;
+            break;
+        case 8:
+            retorno = "Agosto " + ano;
+            break;
+        case 9:
+            retorno = "Setembro " + ano;
+            break;
+        case 10:
+            retorno = "Outubro " + ano;
+            break;
+        case 11:
+            retorno = "Novembro " + ano;
+            break;
+        case 12:
+            retorno = "Dezembro " + ano;
+            break;
+    }
+    return retorno;
 }
 
 function getNomePeriodo(value, ano, tipoPeriodo) {
@@ -144,7 +192,7 @@ function getNomePeriodo(value, ano, tipoPeriodo) {
     else if (tipoPeriodo === 'Trimestre') {
         switch (value) {
             case 0:
-                retorno = "JAN - MAR "  + ano;
+                retorno = "JAN - MAR " + ano;
                 break;
             case 1:
                 retorno = "FEV - ABR" + ano;
@@ -184,7 +232,7 @@ function getNomePeriodo(value, ano, tipoPeriodo) {
     else if (tipoPeriodo === 'Semestre') {
         switch (value) {
             case 0:
-                retorno = "JAN - JUN "  + ano;
+                retorno = "JAN - JUN " + ano;
                 break;
             case 1:
                 retorno = "FEV - JUL" + ano;

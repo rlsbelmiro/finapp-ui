@@ -14,24 +14,30 @@
 
 
 .load {
-    width: 100px;
-    height: 100px;
-    top: 30%;
-    left: 45%;
-    color: black;
-}
-.load-10{
-    width: 10px;
-    height: 10px;
-    color: black;
+    width: 24px;
+    height: 24px;
+    text-align: center;
+    border: 3px solid white;
+    margin: 0 auto;
+    border-left-color: #28a745;
+    border-radius: 50%;
+    animation: spin 1s infinite;
 }
 
-.load-40{
-    width: 40px;
-    height: 40px;
-    font-size: 9px;
-    padding: 8px 0;
+.load-100 {
+    width: 100px;
+    height: 100px;
+    text-align: center;
+    border: 5px solid white;
     margin: 0 auto;
+    margin-top: 300px;
+    border-left-color: #28a745;
+    border-radius: 50%;
+    animation: spin 1s infinite;
+}
+
+@keyframes spin{
+    to { transform: rotate(360deg);}
 }
 
 #linkArquivo{
@@ -108,4 +114,69 @@ a.hover-conteudo:hover{
 
 #divLogin form .form-control{
     padding: 5px 10px !important;
+}
+
+#navegacaoMes{
+    font-size: 20px;
+    text-align: center;
+    color: #28a745;
+    max-width: 220px;
+    background-color: white;
+    border-radius: 25px;
+
+}
+
+#navegacaoMesAnt{
+    background-color: white;
+    color: #28a745;
+    font-size: 22px;
+    padding: 4px;
+    float: left;
+    border-right: none;
+    border-bottom-left-radius: 15px;
+    border-top-left-radius: 15px;
+    margin: 0;
+    cursor: pointer;
+}
+
+#navegacaoMesAnt:hover{
+    background-color: #28a745;
+    color: white;
+}
+
+#navegacaoMesPos{
+    background-color: white;
+    color: #28a745;
+    font-size: 22px;
+    padding: 4px;
+    border-left: none;
+    float: right;
+    border-bottom-right-radius: 15px;
+    border-top-right-radius: 15px;
+    cursor: pointer;
+}
+
+#navegacaoMesPos:hover{
+    background-color: #28a745;
+    color: white;
+}
+
+#manterLancamento{
+    color: white;
+}
+
+#atualizarLista{
+    width: 60px;
+}
+
+.resumoValores{
+    border: 1px solid #28a745;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #28a745;
+    background-color: white;
+    padding: 4px 10px;
+    max-width: 200px;
+    display: inline;
+    margin: 2px;
 }

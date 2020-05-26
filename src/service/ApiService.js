@@ -12,7 +12,13 @@ export const ApiService = {
         }).then(
             response => response.json()
         ).catch(
-            alert('erro ao fazer requisição ajax')
+            function () {
+                return {
+                    sucess: false,
+                    message: "Erro ao fazer requisição para o servidor",
+                    data: null
+                }
+            }
         )
     },
     getById(endpoint, id) {
@@ -23,7 +29,13 @@ export const ApiService = {
         }).then(
             response => response.json()
         ).catch(
-            alert('erro ao fazer requisição ajax')
+            function () {
+                return {
+                    sucess: false,
+                    message: "Erro ao fazer requisição para o servidor",
+                    data: null
+                }
+            }
         )
     },
     post(endpoint, data) {
@@ -37,8 +49,13 @@ export const ApiService = {
             body: JSON.stringify(data)
         }).then(
             response => response.json()
-        ).catch(
-            alert('erro ao fazer requisição ajax')
+        ).catch(function () {
+            return {
+                sucess: false,
+                message: "Erro ao fazer requisição para o servidor",
+                data: null
+            }
+        }
         )
     },
     delete(endpoint, id) {
@@ -50,7 +67,13 @@ export const ApiService = {
         }).then(
             response => response.json()
         ).catch(
-            alert('erro ao fazer requisição ajax')
+            function () {
+                return {
+                    sucess: false,
+                    message: "Erro ao fazer requisição para o servidor",
+                    data: null
+                }
+            }
         )
     },
     put(endpoint, data, id) {
@@ -65,7 +88,13 @@ export const ApiService = {
         }).then(
             response => response.json()
         ).catch(
-            alert('erro ao fazer requisição ajax')
+            function () {
+                return {
+                    sucess: false,
+                    message: "Erro ao fazer requisição para o servidor",
+                    data: null
+                }
+            }
         )
     },
     postForm(endpoint, data) {
@@ -85,7 +114,13 @@ export const ApiService = {
         }).then(
             response => response.json()
         ).catch(
-            alert('erro ao fazer requisição ajax')
+            function () {
+                return {
+                    sucess: false,
+                    message: "Erro ao fazer requisição para o servidor",
+                    data: null
+                }
+            }
         )
     }
 }

@@ -3,8 +3,8 @@ import { ApiService } from './ApiService'
 const endpoint = 'documents';
 
 export const LancamentoService = {
-    list() {
-        return ApiService.get(endpoint + '/mesAtual');
+    list(mes, ano) {
+        return ApiService.get(endpoint + '/getByMonth/' + mes + '/' + ano);
     },
     get(id) {
         return ApiService.getById(endpoint, id);

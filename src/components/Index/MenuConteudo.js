@@ -23,40 +23,40 @@ class MenuConteudo extends Component {
 
     }
 
-    componentDidMount(){
-        Channel.on('login',this.validarAcessos);
+    componentDidMount() {
+        Channel.on('login', this.validarAcessos);
     }
 
-    componentWillUnmount(){
-        Channel.removeListener('login',this.validarAcessos);
+    componentWillUnmount() {
+        Channel.removeListener('login', this.validarAcessos);
     }
 
-    validarAcessos(){
-        this.setState({usuarioLogado: isLogged()});
+    validarAcessos() {
+        this.setState({ usuarioLogado: isLogged() });
     }
 
     render() {
         const { state } = this;
         return (
-            <Nav className="mr-auto" style={{display: state.usuarioLogado ? '' : 'none'}}>
+            <Nav className="mr-auto" style={{ display: state.usuarioLogado ? '' : 'none', marginLeft: '155px' }}>
 
-                <Link className="nav-link text-white border-left  hover-conteudo" to="/home">
+                <Link className="nav-link text-white border-bottom mr-2 hover-conteudo" to="/home">
                     <i className={this.props.clsIcone}>house</i>
                     <span style={{ display: this.props.exibir ? '' : 'none' }} className="h6 align-top">Home</span>
                 </Link>
-                <Link className="nav-link text-white  hover-conteudo" to="/agenda">
+                <Link className="nav-link text-white border-bottom mr-2  hover-conteudo" to="/agenda">
                     <i className={this.props.clsIcone}>calendar_today</i>
                     <span style={{ display: this.props.exibir ? '' : 'none' }} className="h6 align-top">Agenda</span>
                 </Link>
-                <Link className="nav-link text-white  hover-conteudo" to="/lancamentos">
+                <Link className="nav-link text-white border-bottom mr-2  hover-conteudo" to="/lancamentos">
                     <i className={this.props.clsIcone}>attach_money</i>
                     <span style={{ display: this.props.exibir ? '' : 'none' }} className="h6 align-top">Lançamentos</span>
                 </Link>
-                <Link className="nav-link text-white  hover-conteudo" to="/extrato">
+                <Link className="nav-link text-white border-bottom mr-2 hover-conteudo" to="/extrato">
                     <i className={this.props.clsIcone}>playlist_add_check</i>
                     <span style={{ display: this.props.exibir ? '' : 'none' }} className="h6 align-top">Extrato</span>
                 </Link>
-                <Link className="nav-link text-white  hover-conteudo" to="/fluxocaixa">
+                <Link className="nav-link text-white border-bottom mr-2 hover-conteudo" to="/fluxocaixa">
                     <i className={this.props.clsIcone}>account_balance_wallet</i>
                     <span style={{ display: this.props.exibir ? '' : 'none' }} className="h6 align-top">Fluxo de caixa</span>
                 </Link>

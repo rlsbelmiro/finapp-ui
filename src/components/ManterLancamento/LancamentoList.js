@@ -14,6 +14,9 @@ import Col from 'react-bootstrap/Col';
 
 import { Channel } from '../../service/EventService';
 
+import * as date from '../../utils/date';
+import LancamentoForm from './LancamentoForm';
+
 
 class LancamentoList extends Component {
     static defaultProps = {
@@ -48,6 +51,7 @@ class LancamentoList extends Component {
         this.searchList = this.searchList.bind(this);
         this.visualizarFatura = this.visualizarFatura.bind(this);
         this.agruparCartao = this.agruparCartao.bind(this);
+        this.navegarMes = this.navegarMes.bind(this);
 
         this.state = {
             lancamentos: [],
@@ -60,13 +64,15 @@ class LancamentoList extends Component {
             mensagem: '',
             recarregar: false,
             cancelarPagamento: false,
-            lancamentosAgrupados: []
+            lancamentosAgrupados: [],
+            mesAtual: new Date().getMonth() + 1,
+            anoAtual: new Date().getFullYear()
         }
     }
 
     async componentDidMount() {
         if (!this.props.carregarSomentePesquisa) {
-            this.carregarLancamentos();
+            this.carregarLancamentos(false, this.state.mesAtual, this.state.anoAtual);
         } else {
             this.searchList(this.props.filtro);
         }
@@ -102,16 +108,19 @@ class LancamentoList extends Component {
     }
 
 
-    async carregarLancamentos(reload) {
+    async carregarLancamentos(reload, mes, ano) {
         if (!reload) {
             this.setState({ aguardar: true });
         }
-        const lancamentos = await LancamentoService.list();
 
-        if (lancamentos.sucesso) {
+        const lancamentos = await LancamentoService.list(mes, ano);
+
+        if (lancamentos.success) {
             this.setState({
-                lancamentos: lancamentos,
-                aguardar: false
+                lancamentos: lancamentos.data,
+                aguardar: false,
+                mesAtual: mes,
+                anoAtual: ano
             })
         } else {
             this.setState({
@@ -156,21 +165,21 @@ class LancamentoList extends Component {
         const { state } = this;
         var total = 0;
         switch (tipo) {
-            case "CREDITO":
-                var lctos = state.lancamentos.filter(function (obj) { return obj.tipo == "CREDITO" });
-                lctos.map(lcto => { total += lcto.valor; });
+            case "CREDIT":
+                var lctos = state.lancamentos.filter(function (obj) { return obj.typeName == "CREDIT" });
+                lctos.map(lcto => { total += lcto.value; });
                 break;
-            case "DEBITO":
-                var lctos = state.lancamentos.filter(function (obj) { return obj.tipo == "DEBITO" });
-                lctos.map(lcto => { total += lcto.valor; });
+            case "DEBIT":
+                var lctos = state.lancamentos.filter(function (obj) { return obj.typeName == "DEBIT" });
+                lctos.map(lcto => { total += lcto.value; });
                 break;
             case "SALDO":
-                var lctoC = state.lancamentos.filter(function (obj) { return obj.tipo == "CREDITO" });
-                var lctoD = state.lancamentos.filter(function (obj) { return obj.tipo == "DEBITO" });
+                var lctoC = state.lancamentos.filter(function (obj) { return obj.typeName == "CREDIT" });
+                var lctoD = state.lancamentos.filter(function (obj) { return obj.typeName == "DEBIT" });
                 var totalC = 0;
                 var totalD = 0;
-                lctoC.map(lcto => { totalC += lcto.valor; });
-                lctoD.map(lcto => { totalD += lcto.valor; });
+                lctoC.map(lcto => { totalC += lcto.value; });
+                lctoD.map(lcto => { totalD += lcto.value; });
                 total = totalC - totalD;
 
         }
@@ -254,150 +263,226 @@ class LancamentoList extends Component {
 
     }
 
+    async navegarMes(anterior) {
+        let mes = this.state.mesAtual;
+        let ano = this.state.anoAtual;
+        if (anterior) {
+            if (mes == 1) {
+                mes = 12;
+                ano--;
+            }
+            else {
+                mes--;
+            }
+        }
+        else {
+            if (mes == 12) {
+                mes = 1;
+                ano++;
+            }
+            else {
+                mes++;
+            }
+        }
+
+        this.carregarLancamentos(false, mes, ano);
+    }
+
+    getDescricaoSituacao(x) {
+        var retorno = "";
+        switch (x) {
+            case "Pending":
+                retorno = "Previsto";
+                break;
+            case "Paid":
+                retorno = "Liquidado";
+                break;
+            case "ParcialPaid":
+                retorno = "Liquidado parcial";
+                break;
+            case "Canceled":
+                retorno = "Cancelado";
+                break;
+        }
+
+        return retorno;
+    }
+
+    getDescricaoTipo(x) {
+        var retorno = "";
+        switch (x) {
+            case "CREDIT":
+                retorno = "Crédito";
+                break;
+            case "DEBIT":
+                retorno = "Débito";
+                break;
+        }
+
+        return retorno;
+    }
+
 
     render() {
         const { state, props } = this;
         return (
             <div id="lancamentoLista">
-                <div className="load" style={{ display: (state.aguardar ? 'block' : 'none') }} ><i className="fa fa-cog fa-spin fa-3x fa-fw"></i>Aguarde...</div>
-                <div style={{ display: (state.aguardar ? 'none' : 'block') }}>
-                    <Table striped bordered hover size="sm">
-                        <thead>
-                            <tr>
-                                <th style={{ display: props.exibirCheckbox ? '' : 'none' }}>
-                                    <div className="custom-control custom-checkbox mr-sm-2">
-                                        <input type="checkbox" className="custom-control-input" id="customControlAutosizing" />
-                                        <label className="custom-control-label" htmlFor="customControlAutosizing"></label>
+                <div>
+                    <Row className="mt-3">
+                        <Col md="2">
+                            <LancamentoForm lancamentoEdit={state.lancamentoid} />
+                        </Col>
+                        <Col md="10">
+                            <Row>
+                                <Col md="1">
+                                    <div id="atualizarLista">
+                                        <OverlayTrigger overlay={<Tooltip id="tooltip-view">Atualizar lista</Tooltip>}>
+                                            <Button onClick={() => this.carregarLancamentos(false, state.mesAtual, state.anoAtual)} size="sm" className="bg-white text-success border-success"><span class="material-icons md-12">autorenew</span></Button>
+                                        </OverlayTrigger>
                                     </div>
-                                </th>
-                                <th style={{ display: props.exibirId ? '' : 'none' }}>Id</th>
-                                <th style={{ display: props.exibirDescricao ? '' : 'none' }}>Descrição</th>
-                                <th style={{ display: props.exibirEmissao ? '' : 'none' }}>Emissão</th>
-                                <th style={{ display: props.exibirConta ? '' : 'none' }}>Conta\Cartão</th>
-                                <th style={{ display: props.exibirFavorecido ? '' : 'none' }}>Favorecido</th>
-                                <th style={{ display: props.exibirVencimento ? '' : 'none' }}>Vencimento</th>
-                                <th style={{ display: props.exibirSituacao ? '' : 'none' }}>Situação</th>
-                                <th style={{ display: props.exibirValor ? '' : 'none' }}>Valor</th>
-                                <th style={{ display: props.exibirParcelamento ? '' : 'none' }}>Parcelamento</th>
-                                <th style={{ display: props.exibirAcoes ? '' : 'none' }}>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {
-                                state.lancamentos.map(lcto =>
-                                    <tr className={lcto.tipo === 'CREDITO' ? 'text-success' : 'text-danger'} key={lcto.id}>
-                                        <td style={{ display: props.exibirCheckbox ? '' : 'none' }}>
-                                            <div className="custom-control custom-checkbox mr-sm-2">
-                                                <input type="checkbox" className="custom-control-input" id="customControlAutosizing1" />
-                                                <label className="custom-control-label" htmlFor="customControlAutosizing1"></label>
-                                            </div>
-                                        </td>
-                                        <td style={{ display: props.exibirId ? '' : 'none' }}>{lcto.id}</td>
-                                        <td style={{ display: props.exibirDescricao ? '' : 'none' }}>{lcto.descricao}</td>
-                                        <td style={{ display: props.exibirEmissao ? '' : 'none' }}>
-                                            {lcto.dataCompetenciaFormatada}
+                                </Col>
+                                <Col md="3">
+                                    <div id="navegacaoMes">
+                                        <span id="navegacaoMesAnt" class="material-icons" onClick={() => this.navegarMes(true)}>skip_previous</span>
+                                        <span id="navegacaoMesTexto">{date.getDescricaoMes(state.mesAtual, state.anoAtual)}</span>
+                                        <span id="navegacaoMesPos" class="material-icons" onClick={() => this.navegarMes(false)}>skip_next</span>
+                                    </div>
+                                </Col>
+                                <Col md="8" className="text-right">
+                                    <div className="resumoValores bg-success text-white border-white">
+                                        <strong>Receber:</strong> {
+                                            new Intl.NumberFormat('pt-BR', {
+                                                style: 'currency',
+                                                currency: 'BRL'
+                                            }).format(this.obterTotal("CREDIT"))
+                                        }
+                                    </div>
+                                    <div className="resumoValores bg-danger text-white border-white">
+                                        <strong>Pagar:</strong> {
+                                            new Intl.NumberFormat('pt-BR', {
+                                                style: 'currency',
+                                                currency: 'BRL'
+                                            }).format(this.obterTotal("DEBIT"))
+                                        }
+                                    </div>
+                                    <div className="resumoValores">
+                                        <strong>Saldo:</strong> {
+                                            new Intl.NumberFormat('pt-BR', {
+                                                style: 'currency',
+                                                currency: 'BRL'
+                                            }).format(this.obterTotal("SALDO"))
+                                        }
+                                    </div>
+                                </Col>
+                            </Row>
 
-                                        </td>
-                                        <td style={{ display: props.exibirConta ? '' : 'none' }}>{!lcto.cartaoDeCredito.descricao ? 'Conta: ' + lcto.carteira.descricao : 'Cartão: ' + lcto.cartaoDeCredito.descricao}</td>
-                                        <td style={{ display: props.exibirFavorecido ? '' : 'none' }}>{lcto.pessoa.nome}</td>
-                                        <td style={{ display: props.exibirVencimento ? '' : 'none' }}>
-                                            {lcto.dataVencimentoFormatada}
-                                        </td>
-                                        <td style={{ display: props.exibirSituacao ? '' : 'none' }}>{lcto.situacao}</td>
-                                        <td style={{ display: props.exibirValor ? '' : 'none' }}>
-                                            {
-                                                new Intl.NumberFormat('pt-BR', {
-                                                    style: 'currency',
-                                                    currency: 'BRL'
-                                                }).format(lcto.valor)
-                                            }
-                                        </td>
-                                        <td style={{ display: props.exibirParcelamento ? '' : 'none' }}>
-                                            {lcto.infoLancamento ? lcto.infoLancamento : '1 de 1'}
-                                        </td>
-                                        <td style={{ display: props.exibirAcoes ? '' : 'none' }}>
-                                            <ButtonGroup>
-                                                <OverlayTrigger overlay={<Tooltip id="tooltip-view">Visualizar detalhes</Tooltip>}>
-                                                    <Button style={{ display: (!lcto.podeAlterar ? 'inline' : 'none') }} variant="primary" size="sm" onClick={() => this.getLancamento(lcto.id)}><i className="material-icons md-12">visibility</i></Button>
-                                                </OverlayTrigger>
-                                                <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Editar</Tooltip>}>
-                                                    <Button style={{ display: (lcto.podeAlterar ? 'inline' : 'none') }} variant="primary" size="sm" onClick={() => this.getLancamento(lcto.id)}><i className="material-icons md-12">edit</i></Button>
-                                                </OverlayTrigger>
 
-                                                <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Pagar</Tooltip>}>
-                                                    <Button style={{ display: (lcto.podePagar ? 'inline' : 'none') }} variant="success" size="sm" onClick={() => this.pagarLancamento(lcto.id, lcto.faturaCartaoId)}><i className="material-icons md-12">attach_money</i></Button>
-                                                </OverlayTrigger>
-
-                                                <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Fatura de cartão</Tooltip>}>
-                                                    <Button style={{ display: (lcto.cartaoDeCreditoId > 0 && props.exibirFaturaCartao ? 'inline' : 'none') }} variant="secondary" size="sm" onClick={() => this.visualizarFatura(lcto.faturaCartaoId)}><i className="material-icons md-12">credit_card</i></Button>
-                                                </OverlayTrigger>
-
-                                                <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Cancelar</Tooltip>}>
-                                                    <Button style={{ display: (lcto.podeCancelar ? 'inline' : 'none') }} variant="warning" size="sm" onClick={() => this.handleCancelarPagamento(lcto.id)}><i className="material-icons md-12">block</i></Button>
-                                                </OverlayTrigger>
-
-                                                <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Excluir</Tooltip>}>
-                                                    <Button style={{ display: (lcto.podeExcluir ? 'inline' : 'none') }} variant="danger" size="sm" onClick={() => this.handleRemove(lcto.id)}><i className="material-icons md-12">delete</i></Button>
-                                                </OverlayTrigger>
-                                            </ButtonGroup>
-                                        </td>
-                                    </tr>
-                                )
-                            }
-                        </tbody>
-                    </Table>
-
-                    <Row style={{ display: this.props.exibirResumo ? 'block' : 'none' }}>
-                        <Col md={{ span: 8, offset: 4 }}>
-                            <CardDeck>
-                                <Card border="success" text="success" style={{ width: "200px" }}>
-                                    <Card.Header>Total receitas</Card.Header>
-                                    <Card.Body>
-                                        <Card.Title>
-                                            {
-                                                new Intl.NumberFormat('pt-BR', {
-                                                    style: 'currency',
-                                                    currency: 'BRL'
-                                                }).format(this.obterTotal("CREDITO"))
-                                            }
-                                        </Card.Title>
-                                    </Card.Body>
-                                </Card>
-                                <Card border="danger" text="danger" style={{ width: "200px" }}>
-                                    <Card.Header>Total despesas</Card.Header>
-                                    <Card.Body>
-                                        <Card.Title>
-                                            {
-                                                new Intl.NumberFormat('pt-BR', {
-                                                    style: 'currency',
-                                                    currency: 'BRL'
-                                                }).format(this.obterTotal("DEBITO"))
-                                            }
-                                        </Card.Title>
-                                    </Card.Body>
-                                </Card>
-                                <Card border={this.obterTotal("SALDO") >= 0 ? "primary" : "danger"} text={this.obterTotal("SALDO") >= 0 ? "primary" : "danger"} style={{ width: "200px" }}>
-                                    <Card.Header>Saldo</Card.Header>
-                                    <Card.Body>
-                                        <Card.Title>
-                                            {
-                                                new Intl.NumberFormat('pt-BR', {
-                                                    style: 'currency',
-                                                    currency: 'BRL'
-                                                }).format(this.obterTotal("SALDO"))
-                                            }
-                                        </Card.Title>
-                                    </Card.Body>
-                                </Card>
-                            </CardDeck>
                         </Col>
                     </Row>
+                    <Row>
+                        <Col md="12" style={{ display: (!state.aguardar ? 'none' : '') }}>
+                            <div class="load"></div>
+                        </Col>
+                    </Row>
+                    <div id="tabela-documentos" style={{ display: (state.aguardar ? 'none' : '') }}>
+                        <Row>
+                            <Table striped hover size="sm" variant="dark">
+                                <thead>
+                                    <tr>
+                                        <th style={{ display: props.exibirCheckbox ? '' : 'none' }}>
+                                            <div className="custom-control custom-checkbox mr-sm-2">
+                                                <input type="checkbox" className="custom-control-input" id="customControlAutosizing" />
+                                                <label className="custom-control-label" htmlFor="customControlAutosizing"></label>
+                                            </div>
+                                        </th>
+                                        <th style={{ display: props.exibirId ? '' : 'none' }}>Id</th>
+                                        <th style={{ display: props.exibirId ? '' : 'none' }}>Tipo</th>
+                                        <th style={{ display: props.exibirDescricao ? '' : 'none' }}>Descrição</th>
+                                        <th style={{ display: props.exibirEmissao ? '' : 'none' }}>Emissão</th>
+                                        <th style={{ display: props.exibirConta ? '' : 'none' }}>Conta\Cartão</th>
+                                        <th style={{ display: props.exibirFavorecido ? '' : 'none' }}>Favorecido</th>
+                                        <th style={{ display: props.exibirVencimento ? '' : 'none' }}>Vencimento</th>
+                                        <th style={{ display: props.exibirSituacao ? '' : 'none' }}>Situação</th>
+                                        <th style={{ display: props.exibirValor ? '' : 'none' }}>Valor</th>
+                                        <th style={{ display: props.exibirParcelamento ? '' : 'none' }}>Parcelamento</th>
+                                        <th style={{ display: props.exibirAcoes ? '' : 'none' }}>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {
+                                        state.lancamentos.map(lcto =>
+                                            <tr key={lcto.id}>
+                                                <td style={{ display: props.exibirCheckbox ? '' : 'none' }}>
+                                                    <div className="custom-control custom-checkbox mr-sm-2">
+                                                        <input type="checkbox" className="custom-control-input" id="customControlAutosizing1" />
+                                                        <label className="custom-control-label" htmlFor="customControlAutosizing1"></label>
+                                                    </div>
+                                                </td>
+                                                <td style={{ display: props.exibirId ? '' : 'none' }}>{lcto.id}</td>
+                                                <td style={{ display: props.exibirId ? '' : 'none' }}>{this.getDescricaoTipo(lcto.typeName)}</td>
+                                                <td style={{ display: props.exibirDescricao ? '' : 'none' }}>{lcto.description}</td>
+                                                <td style={{ display: props.exibirEmissao ? '' : 'none' }}>
+                                                    {
+                                                        date.formatarDataBR(lcto.issueDate)
+                                                    }
+
+                                                </td>
+                                                <td style={{ display: props.exibirConta ? '' : 'none' }}>{lcto.creditCardName == "" ? 'Conta: ' + lcto.walletName : 'Cartão: ' + lcto.creditCardName}</td>
+                                                <td style={{ display: props.exibirFavorecido ? '' : 'none' }}></td>
+                                                <td style={{ display: props.exibirVencimento ? '' : 'none' }}>
+                                                    {date.formatarDataBR(lcto.dueDate)}
+                                                </td>
+                                                <td style={{ display: props.exibirSituacao ? '' : 'none' }}>{this.getDescricaoSituacao(lcto.stateName)}</td>
+                                                <td style={{ display: props.exibirValor ? '' : 'none' }}>
+                                                    {
+                                                        new Intl.NumberFormat('pt-BR', {
+                                                            style: 'currency',
+                                                            currency: 'BRL'
+                                                        }).format(lcto.value)
+                                                    }
+                                                </td>
+                                                <td style={{ display: props.exibirParcelamento ? '' : 'none' }}>
+                                                    {lcto.info != "" ? lcto.info : '1 de 1'}
+                                                </td>
+                                                <td style={{ display: props.exibirAcoes ? '' : 'none' }}>
+                                                    <ButtonGroup>
+                                                        <OverlayTrigger overlay={<Tooltip id="tooltip-view">Visualizar detalhes</Tooltip>}>
+                                                            <Button style={{ display: (!lcto.canUpdate ? 'inline' : 'none') }} variant="primary" size="sm" onClick={() => this.getLancamento(lcto.id)}><i className="material-icons md-12">visibility</i></Button>
+                                                        </OverlayTrigger>
+                                                        <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Editar</Tooltip>}>
+                                                            <Button style={{ display: (lcto.canUpdate ? 'inline' : 'none') }} variant="primary" size="sm" onClick={() => this.getLancamento(lcto.id)}><i className="material-icons md-12">edit</i></Button>
+                                                        </OverlayTrigger>
+
+                                                        <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Pagar</Tooltip>}>
+                                                            <Button style={{ display: (lcto.canPaid ? 'inline' : 'none') }} variant="success" size="sm" onClick={() => this.pagarLancamento(lcto.id, lcto.faturaCartaoId)}><i className="material-icons md-12">attach_money</i></Button>
+                                                        </OverlayTrigger>
+
+                                                        <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Fatura de cartão</Tooltip>}>
+                                                            <Button style={{ display: (lcto.cartaoDeCreditoId > 0 && props.exibirFaturaCartao ? 'inline' : 'none') }} variant="secondary" size="sm" onClick={() => this.visualizarFatura(lcto.faturaCartaoId)}><i className="material-icons md-12">credit_card</i></Button>
+                                                        </OverlayTrigger>
+
+                                                        <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Cancelar</Tooltip>}>
+                                                            <Button style={{ display: (lcto.canCancel ? 'inline' : 'none') }} variant="warning" size="sm" onClick={() => this.handleCancelarPagamento(lcto.id)}><i className="material-icons md-12">block</i></Button>
+                                                        </OverlayTrigger>
+
+                                                        <OverlayTrigger overlay={<Tooltip id="tooltip-edit">Excluir</Tooltip>}>
+                                                            <Button style={{ display: (lcto.canDelete ? 'inline' : 'none') }} variant="danger" size="sm" onClick={() => this.handleRemove(lcto.id)}><i className="material-icons md-12">delete</i></Button>
+                                                        </OverlayTrigger>
+                                                    </ButtonGroup>
+                                                </td>
+                                            </tr>
+                                        )
+                                    }
+                                </tbody>
+                            </Table>
+                        </Row>
+                    </div>
 
 
                 </div>
                 <ModalAlert mensagem={state.mensagem} erro={state.erro} alerta={state.alerta} exibirModal={state.excluir || state.erro || state.alerta} onConfirm={() => this.onRemove(state.idExcluir)} onCancel={this.handleCancelRemove} />
                 <ModalAlert mensagem={state.mensagem} alerta={state.alerta} exibirModal={state.cancelarPagamento} onConfirm={() => this.onCancelarPagamento(state.idExcluir)} onCancel={this.handleCancelRemove} />
-            </div>
+            </div >
         )
     }
 }

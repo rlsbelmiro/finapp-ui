@@ -206,10 +206,10 @@ class LancamentoForm extends Component {
         }
         this.setState({ aguardarCadastro: true });
 
-        if(!this.state.rateioCategorias && this.state.categoriaSelecionadaId > 0){
+        if (!this.state.rateioCategorias && this.state.categoriaSelecionadaId > 0) {
             var index = this.state.categorias.findIndex(c => c.id == this.state.categoriaSelecionadaId);
             //if (lancamento.lancamentoCategorias != null && lancamento.lancamentoCategorias.length > 0) {
-                lancamento.lancamentoCategorias = new Array();
+            lancamento.lancamentoCategorias = new Array();
             //}
             if (index >= 0) {
                 var categoria = this.state.categorias[index];
@@ -226,7 +226,7 @@ class LancamentoForm extends Component {
             let valorLcto = monetario.parseDecimal(this.state.valorEntrada);
             lancamento.lancamentoCategorias.forEach(x => valorRateio += x.valor);
 
-            if(valorRateio != valorLcto){
+            if (valorRateio != valorLcto) {
                 this.setState({
                     aguardarCadastro: false,
                     mensagem: 'O valor de rateio de categorias deve ser igual ao valor do lançamento.',
@@ -286,11 +286,11 @@ class LancamentoForm extends Component {
                     lancamento.dataVencimentoFormatada = value;
                 }
 
-               
+
                 break;
             case "dataVencimento":
                 lancamento.dataVencimentoFormatada = value;
-                
+
                 break;
             case "valor":
                 let valor = monetario.formatarMoeda(value);
@@ -369,7 +369,7 @@ class LancamentoForm extends Component {
             const { lancamento } = this.state;
             lancamento.parcelamentoFixo = target.checked;
             let valorParcela = monetario.parseDecimal(this.state.valorEntrada);
-            if(!lancamento.parcelamentoFixo && lancamento.qtdParcelas > 1){
+            if (!lancamento.parcelamentoFixo && lancamento.qtdParcelas > 1) {
                 valorParcela = valorParcela / lancamento.qtdParcelas;
             }
             this.setState({ lancamento: lancamento, valorParcela: valorParcela });
@@ -461,13 +461,13 @@ class LancamentoForm extends Component {
             categorias = new Array();
         }
 
-        if(state.categoriaRateioId == 0){
-            this.setState({mensagemRateio: 'Selecione uma categoria'});
+        if (state.categoriaRateioId == 0) {
+            this.setState({ mensagemRateio: 'Selecione uma categoria' });
             return;
         }
 
-        if(state.valorRateio == 0){
-            this.setState({mensagemRateio: 'Informe o valor do rateio'});
+        if (state.valorRateio == 0) {
+            this.setState({ mensagemRateio: 'Informe o valor do rateio' });
             return
         }
 
@@ -484,7 +484,7 @@ class LancamentoForm extends Component {
             }
         }
 
-        if(indexAlteracao < 0){
+        if (indexAlteracao < 0) {
             categorias.push(c);
         } else {
             categorias[index] = c;
@@ -514,7 +514,7 @@ class LancamentoForm extends Component {
         if (index > -1) {
             var c = categorias[index];
             let valor = c.valor;
-            this.setState({ categoriaRateioId: c.categoriaId, valorRateioFormatado: monetario.formatarMoeda(valor.toString().replace('.','')), valorRateio: valor, ehAlteracaoRateio: true });
+            this.setState({ categoriaRateioId: c.categoriaId, valorRateioFormatado: monetario.formatarMoeda(valor.toString().replace('.', '')), valorRateio: valor, ehAlteracaoRateio: true });
         }
 
 
@@ -552,7 +552,7 @@ class LancamentoForm extends Component {
             <div>
                 <CategoriaForm getIdCategoria={this.marcarCategoriaAposCadastro} />
                 <ModalAlert mensagem={state.mensagem} erro={state.erro} alerta={state.alerta} sucesso={state.sucesso} alertaComOk={state.alerta} exibirModal={state.excluir || state.erro || state.sucesso || state.alerta} onCancel={this.onCloseModal} />
-                <Button variant="success" className="mt-2" onClick={this.handleShow} style={{ display: this.props.habilitarNovoLcto ? 'block' : 'none' }}>Novo Lançamento</Button>
+                <Button className="bg-white text-success border-success" onClick={this.handleShow} style={{ display: this.props.habilitarNovoLcto ? 'block' : 'none' }}>Incluir novo</Button>
                 <Modal show={this.state.show} onHide={this.handleClose} size="xl">
                     <Modal.Header closeButton className="bg-success text-white">
                         <Modal.Title>{state.lancamento.id > 0 ? 'Editar lançamento (' + state.lancamento.id + ')' : 'Novo lançamento'}</Modal.Title>
@@ -729,14 +729,14 @@ class LancamentoForm extends Component {
                                                 </Form.Group>
                                             </Col>
                                         </Form.Row>
-                                        <Form.Row style={{display: state.mensagemRateio !== '' ? '' : 'none'}}>
+                                        <Form.Row style={{ display: state.mensagemRateio !== '' ? '' : 'none' }}>
                                             <Col>
                                                 <span className="text-danger">{state.mensagemRateio}</span>
                                             </Col>
                                         </Form.Row>
                                         <Form.Row>
                                             <Col>
-                                                    <Button style={{ display: state.lancamento.id === 0 || state.lancamento.podeAlterar ? '' : 'none' }} variant="success" onClick={this.adicionarCategoria}>{state.ehAlteracaoRateio ? 'Alterar' : 'Adicionar'}</Button>
+                                                <Button style={{ display: state.lancamento.id === 0 || state.lancamento.podeAlterar ? '' : 'none' }} variant="success" onClick={this.adicionarCategoria}>{state.ehAlteracaoRateio ? 'Alterar' : 'Adicionar'}</Button>
                                                 <Button style={{ display: state.ehAlteracaoRateio ? '' : 'none' }} variant="danger" className="ml-2" onClick={this.excluirCategoria}>Excluir</Button>
                                             </Col>
                                         </Form.Row>

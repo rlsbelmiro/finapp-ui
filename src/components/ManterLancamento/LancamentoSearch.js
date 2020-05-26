@@ -90,15 +90,18 @@ class LancamentoSearch extends Component {
 
     async onLoad() {
         var resposta = await LancamentoService.getFiltros();
-        var obj = resposta.data;
-        this.setState({
-            types: obj.types,
-            typeOfDates: obj.typeOfDates,
-            states: obj.states,
-            wallets: obj.wallets,
-            creditCards: obj.creditCards,
-            categories: obj.categories
-        });
+
+        if (resposta.success) {
+            var obj = resposta.data;
+            this.setState({
+                types: obj.types,
+                typeOfDates: obj.typeOfDates,
+                states: obj.states,
+                wallets: obj.wallets,
+                creditCards: obj.creditCards,
+                categories: obj.categories
+            });
+        }
         this.resetState();
 
     }

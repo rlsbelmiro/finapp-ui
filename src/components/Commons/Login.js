@@ -17,7 +17,8 @@ class Login extends Component {
         this.state = {
             login: "",
             password: "",
-            message: ""
+            message: "",
+            carregando: false
         }
 
     }
@@ -35,16 +36,16 @@ class Login extends Component {
     }
 
     async autenticar() {
-        this.setState({ mensagem: "" });
+        this.setState({ mensagem: "", carregando: true });
         const { state } = this;
         var resposta = await AcessoService.autenticar(state.login, state.password);
-        alert(JSON.stringify(resposta));
         if (resposta.success) {
             localStorage.setItem('token', resposta.data.tokenAcesso);
+            this.setState({ mensagem: "", carregando: false });
             Channel.emit('login', true);
             this.props.history.push("/lancamentos");
         } else {
-            this.setState({ message: resposta.message });
+            this.setState({ message: resposta.message, carregando: false });
         }
 
 
@@ -53,36 +54,42 @@ class Login extends Component {
     render() {
         const { state } = this;
         return (
-            <div id="divLogin">
-                <h3>Seja bem-vindo, informe seus dados para acesso</h3>
-                <hr />
-                <Form>
-                    <Form.Row>
-                        <Col>
-                            <Form.Group controlId="email">
-                                <Form.Label>E-mail</Form.Label>
-                                <Form.Control id="email" placeholder="Email" md="4" name="email" defaultValue={state.login} onChange={this.handleChange} />
-                            </Form.Group>
-                        </Col>
-                    </Form.Row>
-                    <Form.Row>
-                        <Col>
-                            <Form.Group controlId="password">
-                                <Form.Label>Senha</Form.Label>
-                                <Form.Control type="password" id="password" placeholder="Senha" name="password" defaultValue={state.password} onChange={this.handleChange} />
-                            </Form.Group>
-                        </Col>
-                    </Form.Row>
-                    <h3 className="text-danger" style={{ display: state.message != "" ? '' : 'none' }}>{state.message}</h3>
-                    <Form.Row>
-                        <Col>
-                            <a href="#">Esqueci minha senha</a>
-                            <Button className="ml-3" variant="success" onClick={this.autenticar}>Login</Button>
-                        </Col>
-                    </Form.Row>
-                </Form>
-                <Button className="mt-4 p-2" style={{ width: "100%", fontSize: "18px" }} variant="info">Quero me cadastrar</Button>
-            </div>
+            <>
+                <div className="load-100" style={{ display: !state.carregando ? 'none' : '' }}></div>
+                <div id="divLogin" style={{ display: state.carregando ? 'none' : '' }}>
+                    <h3 className="text-center text-white">Seja bem-vindo!</h3>
+                    <h5 className="text-center text-white">Informe seus dados para acesso</h5>
+                    <hr />
+                    <Form>
+                        <Form.Row>
+                            <Col>
+                                <Form.Group controlId="email">
+                                    <Form.Label>E-mail</Form.Label>
+                                    <Form.Control id="email" placeholder="Email" md="4" name="email" defaultValue={state.login} onChange={this.handleChange} />
+                                </Form.Group>
+                            </Col>
+                        </Form.Row>
+                        <Form.Row>
+                            <Col>
+                                <Form.Group controlId="password">
+                                    <Form.Label>Senha</Form.Label>
+                                    <Form.Control type="password" id="password" placeholder="Senha" name="password" defaultValue={state.password} onChange={this.handleChange} />
+                                </Form.Group>
+                            </Col>
+                        </Form.Row>
+                        <h3 className="text-danger" style={{ display: state.message != "" ? '' : 'none' }}>{state.message}</h3>
+                        <Form.Row>
+                            <Col md="9" className="text-left">
+                                <a href="javascript:void(0)" style={{ fontSize: '11px' }}>Esqueci minha senha</a>
+                            </Col>
+                            <Col md="3" className="text-right">
+                                <Button variant="success" onClick={this.autenticar}>Entrar</Button>
+                            </Col>
+                        </Form.Row>
+                    </Form>
+                    <Button className="mt-4 p-2" style={{ width: "100%", fontSize: "18px" }} variant="info">Não tem uma conta? Teste agora, grátis por 20 dias</Button>
+                </div>
+            </>
         )
     }
 }
