@@ -1,21 +1,21 @@
 import { ApiService } from './ApiService'
 
-const endpoint = 'categorias';
+const endpoint = 'categories';
 
 export const CategoriaService = {
-    listAnaliticas(tipo){
-        return ApiService.get(endpoint + "/analiticas/" + tipo);
+    listAnaliticas(tipo) {
+        return ApiService.get(endpoint + "/analytics/" + tipo);
     },
-    listNaoAnaliticas(tipo){
+    listNaoAnaliticas(tipo) {
         return ApiService.get(endpoint + "/naoAnaliticas/" + tipo);
     },
-    get(id){
+    get(id) {
         return ApiService.get(endpoint + "/" + id);
     },
-    create(categoria){
-        return ApiService.post(endpoint + '/salvar',categoria);
+    create(categoria) {
+        return ApiService.post(endpoint + '/salvar', categoria);
     },
-    listAtivas(){
+    listAtivas() {
         return ApiService.get(endpoint + '/ativas');
     }
 }

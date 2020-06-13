@@ -11,8 +11,5 @@ export const CartaoDeCreditoService = {
     },
     remove(id) {
         return ApiService.delete(endpoint, id);
-    },
-    listActives() {
-        return ApiService.get(endpoint)
     }
 }

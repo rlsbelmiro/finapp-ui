@@ -38,12 +38,9 @@ class ConteudoFinannceiro extends Component {
     render() {
         const { state } = this;
         return (
-            <Container fluid="true" className="bg-dark">
-                <Row style={{ height: '880px' }}>
-                    <Col md={state.colunasMenu}>
-                        <Saldo />
-                    </Col>
-                    <Col md={state.colunasConteudo} className="bg-dark">
+            <Container fluid="true" style={{ marginTop: '55px' }}>
+                <Row>
+                    <Col md="12" className="bg-light">
                         <Routes />
                     </Col>
                 </Row>

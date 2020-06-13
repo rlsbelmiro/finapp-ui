@@ -34,7 +34,8 @@ class LancamentoList extends Component {
         exibirAcoes: true,
         exibirParcelamento: true,
         exibirDescricao: true,
-        exibirFaturaCartao: true
+        exibirFaturaCartao: true,
+
     }
     constructor(props, context) {
         super(props, context);
@@ -66,7 +67,9 @@ class LancamentoList extends Component {
             cancelarPagamento: false,
             lancamentosAgrupados: [],
             mesAtual: new Date().getMonth() + 1,
-            anoAtual: new Date().getFullYear()
+            anoAtual: new Date().getFullYear(),
+            collection: [],
+            filtered: false,
         }
     }
 
@@ -90,18 +93,20 @@ class LancamentoList extends Component {
     }
 
     async searchList(filtro) {
-        this.setState({ aguardar: true });
+        this.setState({ aguardar: true, filtered: true });
+        alert(JSON.stringify(filtro));
         var resposta = await LancamentoService.pesquisar(filtro);
-        if (resposta.sucesso) {
+        if (resposta.success) {
             this.setState({
-                lancamentos: resposta.objeto,
+                lancamentos: resposta.data,
                 aguardar: false
             })
         } else {
             this.setState({
                 aguardar: false,
                 erro: true,
-                mensagem: resposta.mensagem
+                mensagem: resposta.message,
+                lancamentos: new Array()
             })
         }
 
@@ -113,14 +118,25 @@ class LancamentoList extends Component {
             this.setState({ aguardar: true });
         }
 
+        if (!mes)
+            mes = this.state.mesAtual;
+        if (!ano)
+            ano = this.state.anoAtual;
+
         const lancamentos = await LancamentoService.list(mes, ano);
 
         if (lancamentos.success) {
+            let list = new Array();
+            lancamentos.data.map(x => {
+                list.push(x.id);
+            })
             this.setState({
                 lancamentos: lancamentos.data,
                 aguardar: false,
                 mesAtual: mes,
-                anoAtual: ano
+                anoAtual: ano,
+                collection: list,
+                filtered: false
             })
         } else {
             this.setState({
@@ -213,7 +229,7 @@ class LancamentoList extends Component {
         }
 
         var retorno = await LancamentoService.remove(lancamentoId);
-        if (retorno.sucesso) {
+        if (retorno.success) {
             lancamentos.splice(lancamentoIndex, 1);
             this.setState({ lancamentos: lancamentos, excluir: false, erro: false, alerta: false });
             Channel.emit('lancamento:list', true);
@@ -330,7 +346,7 @@ class LancamentoList extends Component {
                 <div>
                     <Row className="mt-3">
                         <Col md="2">
-                            <LancamentoForm lancamentoEdit={state.lancamentoid} />
+                            <LancamentoForm lancamentoEdit={state.lancamentoid} collection={state.collection} />
                         </Col>
                         <Col md="10">
                             <Row>
@@ -342,7 +358,7 @@ class LancamentoList extends Component {
                                     </div>
                                 </Col>
                                 <Col md="3">
-                                    <div id="navegacaoMes">
+                                    <div id="navegacaoMes" style={{ display: !state.filtered ? '' : 'none' }}>
                                         <span id="navegacaoMesAnt" class="material-icons" onClick={() => this.navegarMes(true)}>skip_previous</span>
                                         <span id="navegacaoMesTexto">{date.getDescricaoMes(state.mesAtual, state.anoAtual)}</span>
                                         <span id="navegacaoMesPos" class="material-icons" onClick={() => this.navegarMes(false)}>skip_next</span>
@@ -384,9 +400,9 @@ class LancamentoList extends Component {
                             <div class="load"></div>
                         </Col>
                     </Row>
-                    <div id="tabela-documentos" style={{ display: (state.aguardar ? 'none' : '') }}>
+                    <div id="tabela-documentos" style={{ marginTop: '10px', display: (state.aguardar ? 'none' : '') }}>
                         <Row>
-                            <Table striped hover size="sm" variant="dark">
+                            <Table striped hover size="sm">
                                 <thead>
                                     <tr>
                                         <th style={{ display: props.exibirCheckbox ? '' : 'none' }}>

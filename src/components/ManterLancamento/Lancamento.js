@@ -10,6 +10,7 @@ import Dropdown from 'react-bootstrap/Dropdown'
 import LancamentoPay from './LancamentoPay';
 import FaturaCartao from '../ManterFaturaCartao/FaturaCartao';
 import { Channel } from '../../service/EventService';
+import Saldo from '../Index/Saldo';
 
 class Lancamento extends Component {
     constructor(props) {
@@ -41,22 +42,28 @@ class Lancamento extends Component {
     render() {
         const { state } = this;
         return (
-            <div id="manterLancamento">
-                <Container fluid="true">
-                    <Row>
-                        <Col md="12">
-                            <LancamentoSearch />
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col>
-                            <LancamentoList onEdit={this.onEdit} />
-                        </Col>
-                    </Row >
-                </Container>
+            <>
+                <Row>
+                    <Col style={{ height: '91vh' }} md="2" className="bg-dark mr-2">
+                        <Saldo />
+                    </Col>
+                    <Col>
+                        <Row>
+                            <Col md="12">
+                                <LancamentoSearch />
+                            </Col>
+                        </Row>
+                        <Row>
+                            <Col>
+                                <LancamentoList onEdit={this.onEdit} />
+                            </Col>
+                        </Row >
+                    </Col>
+                </Row>
+
                 <LancamentoPay />
                 <FaturaCartao />
-            </div>
+            </>
         )
     }
 

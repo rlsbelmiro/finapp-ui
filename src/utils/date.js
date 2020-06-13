@@ -337,3 +337,11 @@ function getUltimoDiaMes(mes) {
     }
     return dia;
 }
+
+export function removerHoraData(data, dataEmIngles) {
+    if (dataEmIngles) {
+        let index = data.indexOf('T');
+        return index > 0 ? data.substring(0, index) : data;
+    }
+    return data;
+}

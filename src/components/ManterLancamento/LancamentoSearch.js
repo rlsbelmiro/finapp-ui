@@ -38,24 +38,19 @@ class LancamentoSearch extends Component {
             creditCards: [],
             categories: [],
             show: false,
+
             filtroSelecionado: {
-                type: null,
-                typeOfDate: null,
-                state: null,
+                types: [],
+                typeOfDates: [],
+                states: [],
                 wallet: {
                     id: 0,
                     name: ''
                 },
-                creditCard: {
-                    id: 0,
-                    name: ''
-                },
-                category: {
-                    id: 0,
-                    name: ''
-                },
-                beginDate: '',
-                endDate: ''
+                creditCards: [],
+                categories: [],
+                beginDate: null,
+                endDate: null
             }
         }
     }
@@ -63,23 +58,17 @@ class LancamentoSearch extends Component {
     resetState() {
         this.setState({
             filtroSelecionado: {
-                type: null,
-                typeOfDate: null,
-                state: null,
+                types: [],
+                typeOfDates: [],
+                states: [],
                 wallet: {
                     id: 0,
                     name: ''
                 },
-                creditCard: {
-                    id: 0,
-                    name: ''
-                },
-                category: {
-                    id: 0,
-                    name: ''
-                },
-                beginDate: '',
-                endDate: ''
+                creditCards: [],
+                categories: [],
+                beginDate: null,
+                endDate: null
             }
         })
     }
@@ -119,31 +108,62 @@ class LancamentoSearch extends Component {
         var selecionarDatas = false;
         switch (filtro) {
             case "tipo":
-                selecao.type = valor;
+                selecao.types = new Array();
+                if (valor) {
+                    let type = {
+                        name: valor.name,
+                        value: valor.value
+                    }
+                    selecao.types.push(type);
+                }
                 break;
             case "data":
-                selecao.typeOfDate = valor;
-                if (valor === "SelectedDates") {
-                    selecionarDatas = true;
+                selecao.typeOfDates = new Array();
+                if (valor) {
+                    let typeOfDates = {
+                        name: valor.name,
+                        value: valor.value
+                    }
+                    selecao.typeOfDates.push(typeOfDates);
+                    if (valor.name === "SelectedDates") {
+                        selecionarDatas = true;
+                    }
                 }
                 break;
             case "situacao":
-                selecao.state = valor;
+                selecao.states = new Array();
+                if (valor) {
+                    let states = {
+                        name: valor.name,
+                        value: valor.value
+                    }
+                    selecao.states.push(states);
+                }
+
                 break;
             case "carteira":
                 selecao.wallet = valor;
                 break;
             case "cartao":
-                selecao.creditCard = valor;
+                selecao.creditCards = new Array();
+                if (valor) {
+                    let cc = {
+                        id: valor.id,
+                        name: valor.name
+                    };
+                    selecao.creditCards.push(cc);
+                }
                 break;
             case "categoria":
-                selecao.category.push({
-                    id: valor.id,
-                    nome: valor.nome
-                })
+                selecao.categories = new Array();
+                if (valor) {
+                    selecao.categories.push({
+                        id: valor.id,
+                        name: valor.name
+                    });
+                }
                 break;
         }
-
         this.setState({ filtroSelecionado: selecao, show: selecionarDatas });
     }
 
@@ -210,9 +230,9 @@ class LancamentoSearch extends Component {
 
     getDescricaoPeriodo() {
         const { state } = this;
-        let retorno = date.formatarDataBR(state.filtroSelecionado.periodoInicio);
+        let retorno = date.formatarDataBR(state.filtroSelecionado.beginDate);
         retorno += " à ";
-        retorno += date.formatarDataBR(state.filtroSelecionado.periodoFim);
+        retorno += date.formatarDataBR(state.filtroSelecionado.endDate);
         return retorno;
     }
 
@@ -305,12 +325,12 @@ class LancamentoSearch extends Component {
                             <ButtonGroup className="mr-2" size="" >
                                 <Dropdown id="pesquisa_tipo" className="mr-1">
                                     <Dropdown.Toggle variant="success">
-                                        Tipo: {this.getDescricaoTipo(state.filtroSelecionado.type)}
+                                        Tipo: {state.filtroSelecionado.types != null && state.filtroSelecionado.types.length > 0 ? this.getDescricaoTipo(state.filtroSelecionado.types[0].name) : ""}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
                                         {
                                             state.types.map(x =>
-                                                <Dropdown.Item onClick={() => this.handleChange('tipo', x.name)}>{this.getDescricaoTipo(x.name)}</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => this.handleChange('tipo', x)}>{this.getDescricaoTipo(x.name)}</Dropdown.Item>
                                             )
                                         }
                                         <hr />
@@ -321,12 +341,12 @@ class LancamentoSearch extends Component {
                                 <Dropdown id="pesquisa_periodo" className="mr-1" style={{ display: this.props.pesquisarPorData ? '' : 'none' }}>
                                     <Dropdown.Toggle variant="success">
                                         <i className="material-icons md-18 mr-2">date_range</i>
-                                        {state.filtroSelecionado.typeOfDate === "SELECIONARDATAS" ? this.getDescricaoPeriodo() : this.getDescricaoTipoData(state.filtroSelecionado.typeOfDate)}
+                                        {state.filtroSelecionado.typeOfDates != null && state.filtroSelecionado.typeOfDates.length > 0 ? state.filtroSelecionado.typeOfDates[0].name === "SelectedDates" ? this.getDescricaoPeriodo() : this.getDescricaoTipoData(state.filtroSelecionado.typeOfDates[0].name) : ""}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
                                         {
                                             state.typeOfDates.map(x =>
-                                                <Dropdown.Item onClick={() => this.handleChange('data', x.name)}>{this.getDescricaoTipoData(x.name)}</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => this.handleChange('data', x)}>{this.getDescricaoTipoData(x.name)}</Dropdown.Item>
                                             )
                                         }
                                         <hr />
@@ -336,12 +356,12 @@ class LancamentoSearch extends Component {
 
                                 <Dropdown id="pesquisa_status" className="mr-1">
                                     <Dropdown.Toggle variant="success">
-                                        Situação: {this.getDescricaoSituacao(state.filtroSelecionado.state)}
+                                        Situação: {state.filtroSelecionado.states != null && state.filtroSelecionado.states.length > 0 ? this.getDescricaoSituacao(state.filtroSelecionado.states[0].name) : ""}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
                                         {
                                             state.states.map(x =>
-                                                <Dropdown.Item onClick={() => this.handleChange('situacao', x.name)}>{this.getDescricaoSituacao(x.name)}</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => this.handleChange('situacao', x)}>{this.getDescricaoSituacao(x.name)}</Dropdown.Item>
                                             )
                                         }
                                         <hr />
@@ -366,7 +386,7 @@ class LancamentoSearch extends Component {
 
                                 <Dropdown id="pesquisa_status" className="mr-2">
                                     <Dropdown.Toggle variant="success">
-                                        Cartão: {state.filtroSelecionado.creditCard.name}
+                                        Cartão: {state.filtroSelecionado.creditCards != null && state.filtroSelecionado.creditCards.length > 0 ? state.filtroSelecionado.creditCards[0].name : ""}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
                                         {
@@ -381,7 +401,7 @@ class LancamentoSearch extends Component {
 
                                 <Dropdown id="pesquisa_categorias" className="mr-1">
                                     <Dropdown.Toggle variant="success">
-                                        Categoria: {state.filtroSelecionado.category.name}
+                                        Categoria: {state.filtroSelecionado.categories != null && state.filtroSelecionado.categories.length > 0 ? state.filtroSelecionado.categories[0].name : ""}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
                                         {

@@ -117,12 +117,14 @@ a.hover-conteudo:hover{
 }
 
 #navegacaoMes{
-    font-size: 20px;
+    font-size: 14px;
     text-align: center;
     color: #28a745;
     max-width: 220px;
-    background-color: white;
+    background-color: #ffffff;
     border-radius: 25px;
+    padding: 5px;
+    font-weight: bold;
 
 }
 
@@ -130,7 +132,7 @@ a.hover-conteudo:hover{
     background-color: white;
     color: #28a745;
     font-size: 22px;
-    padding: 4px;
+    padding: 1px;
     float: left;
     border-right: none;
     border-bottom-left-radius: 15px;
@@ -148,7 +150,7 @@ a.hover-conteudo:hover{
     background-color: white;
     color: #28a745;
     font-size: 22px;
-    padding: 4px;
+    padding: 1px;
     border-left: none;
     float: right;
     border-bottom-right-radius: 15px;

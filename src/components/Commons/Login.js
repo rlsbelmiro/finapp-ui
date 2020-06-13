@@ -57,8 +57,8 @@ class Login extends Component {
             <>
                 <div className="load-100" style={{ display: !state.carregando ? 'none' : '' }}></div>
                 <div id="divLogin" style={{ display: state.carregando ? 'none' : '' }}>
-                    <h3 className="text-center text-white">Seja bem-vindo!</h3>
-                    <h5 className="text-center text-white">Informe seus dados para acesso</h5>
+                    <h3 className="text-center">Seja bem-vindo!</h3>
+                    <h5 className="text-center">Informe seus dados para acesso</h5>
                     <hr />
                     <Form>
                         <Form.Row>
