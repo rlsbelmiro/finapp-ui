@@ -40,11 +40,11 @@ class Saldo extends Component {
 
     async carregarSaldo() {
         var resposta = await CaixaService.obterSaldo();
-        if (resposta.sucesso) {
+        if (resposta.success) {
             this.setState({
-                totalReceitas: resposta.objeto.totalReceitas,
-                totalDespesas: resposta.objeto.totalDespesas,
-                saldo: resposta.objeto.saldo
+                totalReceitas: resposta.data.credit,
+                totalDespesas: resposta.data.debit,
+                saldo: resposta.data.balance
             });
         }
     }

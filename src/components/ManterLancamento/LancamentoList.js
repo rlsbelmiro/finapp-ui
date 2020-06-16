@@ -16,6 +16,7 @@ import { Channel } from '../../service/EventService';
 
 import * as date from '../../utils/date';
 import LancamentoForm from './LancamentoForm';
+import { CaixaService } from '../../service/CaixaService';
 
 
 class LancamentoList extends Component {
@@ -245,8 +246,8 @@ class LancamentoList extends Component {
     }
 
     async onCancelarPagamento(id) {
-        var retorno = await LancamentoService.cancelPay(id);
-        if (retorno.sucesso) {
+        var retorno = await CaixaService.cancel(id);
+        if (retorno.success) {
             this.setState({ excluir: false, erro: false, alerta: false, cancelarPagamento: false });
             Channel.emit('lancamento:list', true);
         } else {
@@ -254,7 +255,7 @@ class LancamentoList extends Component {
                 excluir: false,
                 idExcluir: 0,
                 erro: true,
-                mensagem: (retorno.mensagem ? retorno.mensagem : 'Ocorreu um erro ao tentar excluir!'),
+                mensagem: (retorno.message ? retorno.message : 'Ocorreu um erro ao tentar cancelar o pagamento!'),
                 alerta: false,
                 cancelarPagamento: false
             });

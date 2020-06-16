@@ -24,12 +24,6 @@ export const LancamentoService = {
     edit(lancamento, id) {
         return ApiService.put(endpoint, lancamento, id);
     },
-    pay(lancamento) {
-        return ApiService.post(endpoint + '/pagar', lancamento);
-    },
-    cancelPay(lancamento) {
-        return ApiService.get(endpoint + '/cancelarPagamento/' + lancamento);
-    },
     pesquisar(filtro) {
         return ApiService.post(endpoint + '/search', filtro);
     },
