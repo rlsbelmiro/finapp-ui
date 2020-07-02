@@ -44,7 +44,7 @@ class Lancamento extends Component {
         return (
             <>
                 <Row>
-                    <Col style={{ height: '91vh' }} md="2" className="bg-dark mr-2">
+                    <Col md="2" className="bg-dark mr-2">
                         <Saldo />
                     </Col>
                     <Col>

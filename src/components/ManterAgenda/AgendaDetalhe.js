@@ -6,6 +6,8 @@ import { LancamentoService } from '../../service/LancamentoService';
 import { Row, Col, Table, ButtonGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import LancamentoList from '../ManterLancamento/LancamentoList';
 
+import * as date from '../../utils/date';
+
 class AgendaDetalhe extends Component {
     constructor(props) {
         super(props);
@@ -20,10 +22,13 @@ class AgendaDetalhe extends Component {
             lancamentos: [],
             valor: 0,
             filtro: {
-                periodoInicio: '',
-                periodoFim: '',
-                tipo: '',
-                data: 'SELECIONARDATAS'
+                types: [],
+                typeOfDates: [{
+                    name: "SelectedDates",
+                    value: 7
+                }],
+                beginDate: '',
+                endDate: ''
             }
         }
     }
@@ -37,61 +42,60 @@ class AgendaDetalhe extends Component {
     }
 
     handleClose() {
-        this.setState({ 
+        this.setState({
             show: false,
             lancamentos: [],
             valor: 0,
             dia: '',
             filtro: {
-                periodoInicio: '',
-                periodoFim: '',
-                tipo: '',
-                data: 'SELECIONARDATAS'
+                types: [],
+                typeOfDates: [{
+                    name: "SelectedDates",
+                    value: 7
+                }],
+                beginDate: '',
+                endDate: ''
             }
         });
     }
 
     onLoad(obj) {
         var flt = this.state.filtro;
-        flt.tipo = obj.tipo;
-        var dataIni = obj.periodoInicio ? obj.periodoInicio.split('/') : obj.dataVencimento.split('/');
-        var dataFim = obj.periodoFim ? obj.periodoFim.split('/') : obj.dataVencimento.split('/');
-        flt.periodoInicio = dataIni[2] + '-' + dataIni[1] + '-' + dataIni[0];
-        flt.periodoFim = dataFim[2] + '-' + dataFim[1] + '-' + dataFim[0];
-        if(obj.categorias){
-            flt.categorias = obj.categorias;
-        }
-        this.setState({ show: true, filtro: flt, valor: obj.valor, dia: obj.dataVencimento });
+        flt.types = new Array();
+        flt.types.push({ name: obj.type == 2 ? "DEBIT" : "CREDIT", value: obj.type });
+        flt.beginDate = date.removerHoraData(obj.date, true);
+        flt.endDate = date.removerHoraData(obj.date, true);
+        this.setState({ show: true, filtro: flt, valor: obj.value, dia: date.formatarDataBR(obj.date) });
     }
 
-    getLancamento(id){
-        Channel.emit('lancamento:edit',id);
+    getLancamento(id) {
+        Channel.emit('lancamento:edit', id);
     }
 
     render() {
         const { state } = this;
         return (
             <Modal show={this.state.show} onHide={this.handleClose} size="lg">
-                <Modal.Header className={state.filtro.tipo === "DEBITO" ? "bg-danger text-white" : "bg-success text-white"} closeButton>
+                <Modal.Header className={state.filtro.tipo === 2 ? "bg-danger text-white" : "bg-success text-white"} closeButton>
                     <Modal.Title>
-                        Lançamentos de {state.filtro.tipo} do dia {state.dia} <br />
-                        Valor Total: 
+                        Lançamentos de {state.filtro.tipo === 2 ? "DÉBITO" : "CRÉDITO"} do dia {state.dia} <br />
+                        Valor Total:
                         <label className="ml-1">
                             {
-                            new Intl.NumberFormat('pt-BR', {
-                                style: 'currency',
-                                currency: 'BRL'
-                            }).format(state.valor)
-                        }
+                                new Intl.NumberFormat('pt-BR', {
+                                    style: 'currency',
+                                    currency: 'BRL'
+                                }).format(state.valor)
+                            }
                         </label>
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Row>
                         <Col>
-                            <LancamentoList 
-                                carregarSomentePesquisa={true} 
-                                filtro={state.filtro} 
+                            <LancamentoList
+                                carregarSomentePesquisa={true}
+                                filtro={state.filtro}
                                 exibirResumo={false}
                                 exibirCheckbox={false}
                                 exibirId={false}
@@ -100,7 +104,8 @@ class AgendaDetalhe extends Component {
                                 exibirFavorecido={false}
                                 exibirParcelamento={false}
                                 exibirFaturaCartao={false}
-                                />
+                                exibirHeader={false}
+                            />
                         </Col>
                     </Row>
                 </Modal.Body>

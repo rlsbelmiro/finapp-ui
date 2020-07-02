@@ -36,6 +36,7 @@ class LancamentoList extends Component {
         exibirParcelamento: true,
         exibirDescricao: true,
         exibirFaturaCartao: true,
+        exibirHeader: true
 
     }
     constructor(props, context) {
@@ -95,7 +96,6 @@ class LancamentoList extends Component {
 
     async searchList(filtro) {
         this.setState({ aguardar: true, filtered: true });
-        alert(JSON.stringify(filtro));
         var resposta = await LancamentoService.pesquisar(filtro);
         if (resposta.success) {
             this.setState({
@@ -345,7 +345,7 @@ class LancamentoList extends Component {
         return (
             <div id="lancamentoLista">
                 <div>
-                    <Row className="mt-3">
+                    <Row className="mt-3" style={{ display: props.exibirHeader ? '' : 'none' }}>
                         <Col md="2">
                             <LancamentoForm lancamentoEdit={state.lancamentoid} collection={state.collection} />
                         </Col>

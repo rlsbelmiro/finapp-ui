@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import { AgendaService } from '../../service/AgendaService';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import Card from 'react-bootstrap/Card';
@@ -12,7 +11,9 @@ import LancamentoPay from '../ManterLancamento/LancamentoPay';
 import { Channel } from '../../service/EventService';
 import LancamentoForm from '../ManterLancamento/LancamentoForm';
 import LancamentoSearch from '../ManterLancamento/LancamentoSearch';
+import { LancamentoService } from '../../service/LancamentoService';
 
+import * as date from '../../utils/date';
 
 
 
@@ -56,14 +57,17 @@ class Agenda extends Component {
     }
 
     async onLoad() {
-        var resposta = await AgendaService.list();
-        if (resposta.sucesso) {
-            this.carregarEventosDoMes(resposta.objeto);
+        let mes = this.state.mesAtual;
+        let ano = this.state.anoAtual;
+        var resposta = await LancamentoService.calendar(mes, ano);
+        if (resposta.success) {
+            this.carregarEventosDoMes(resposta.data);
         } else {
-            alert(resposta.mensagem);
             this.setState({ aguardar: false });
         }
     }
+
+
 
     carregarEventosDoMes(objeto) {
         this.setState({ agenda: objeto });
@@ -71,12 +75,11 @@ class Agenda extends Component {
         for (var x = 0; x < this.state.agenda.length; x++) {
             var ag = this.state.agenda[x];
             if (!ag.ocultar) {
-                var data = ag.dataVencimento.split('/');
                 var event = {
-                    id: ag.id,
-                    title: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(ag.valor.toString().replace('-', '')),
-                    date: data[2] + '-' + data[1] + '-' + data[0],
-                    backgroundColor: ag.tipo === 'DEBITO' ? 'red' : 'green',
+                    id: x + 1,
+                    title: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(ag.value.toString().replace('-', '')),
+                    date: date.removerHoraData(ag.date, true),
+                    backgroundColor: ag.type === 2 ? 'red' : 'green',
                     textColor: 'white',
                     borderColor: 'white',
                     classNames: ['evento']
@@ -91,7 +94,7 @@ class Agenda extends Component {
         data = calendarApi.getDate();
         mes = data.getMonth();
         ano = data.getFullYear();
-        this.setState({ events: events, aguardar: false, mesAtual: mes, anoAtual: ano });
+        this.setState({ events: events, aguardar: false, mesAtual: mes + 1, anoAtual: ano });
     }
 
     async carregarOutroMes(anterior) {
@@ -112,14 +115,13 @@ class Agenda extends Component {
         }
         this.setState({ aguardar: true });
         mes++;
-        var resposta = await AgendaService.list(mes, ano);
-        if (resposta.sucesso) {
+        var resposta = await LancamentoService.calendar(mes, ano);
+        if (resposta.success) {
             let calendarApi = this.calendarRef.current.getApi();
             var data = calendarApi.getDate();
-            this.setState({ agenda: resposta.objeto });
-            this.carregarEventosDoMes(resposta.objeto);
+            this.setState({ agenda: resposta.data, mesAtual: mes + 1, anoAtual: ano });
+            this.carregarEventosDoMes(resposta.data);
         } else {
-            alert(resposta.mensagem);
             this.setState({ aguardar: false });
         }
     }
@@ -129,20 +131,20 @@ class Agenda extends Component {
         var total = 0;
         switch (tipo) {
             case "CREDITO":
-                var lctos = state.agenda.filter(function (obj) { return !obj.ocultar && obj.tipo == "CREDITO" });
-                lctos.map(lcto => { total += lcto.valor; });
+                var lctos = state.agenda.filter(function (obj) { return obj.type == 1 });
+                lctos.map(lcto => { total += lcto.value; });
                 break;
             case "DEBITO":
-                var lctos = state.agenda.filter(function (obj) { return !obj.ocultar && obj.tipo == "DEBITO" });
-                lctos.map(lcto => { total += lcto.valor; });
+                var lctos = state.agenda.filter(function (obj) { return obj.type == 2 });
+                lctos.map(lcto => { total += lcto.value; });
                 break;
             case "SALDO":
-                var lctoC = state.agenda.filter(function (obj) { return !obj.ocultar && obj.tipo == "CREDITO" });
-                var lctoD = state.agenda.filter(function (obj) { return !obj.ocultar && obj.tipo == "DEBITO" });
+                var lctoC = state.agenda.filter(function (obj) { return obj.type == 1 });
+                var lctoD = state.agenda.filter(function (obj) { return obj.type == 2 });
                 var totalC = 0;
                 var totalD = 0;
-                lctoC.map(lcto => { totalC += lcto.valor; });
-                lctoD.map(lcto => { totalD += lcto.valor; });
+                lctoC.map(lcto => { totalC += lcto.value; });
+                lctoD.map(lcto => { totalD += lcto.value; });
                 total = totalC - totalD;
 
         }
@@ -166,7 +168,7 @@ class Agenda extends Component {
             filtro.mes = this.state.mesAtual + 1;
             filtro.ano = this.state.anoAtual;
 
-            var resposta = await AgendaService.pesquisar(filtro);
+            var resposta = await LancamentoService.calendar();
             if (resposta.sucesso) {
                 this.carregarEventosDoMes(resposta.objeto);
             } else {
@@ -192,7 +194,7 @@ class Agenda extends Component {
         const { agenda } = this.state;
 
         if (this.state.filtrouNoBanco) {
-            this.setState({aguardar: true});
+            this.setState({ aguardar: true });
             this.onLoad();
         } else {
             for (var x = 0; x < agenda.length; x++) {
@@ -213,7 +215,7 @@ class Agenda extends Component {
                 <LancamentoForm habilitarNovoLcto={false} />
                 <LancamentoPay />
                 <AgendaDetalhe />
-                <div className="load" style={{ display: (state.aguardar ? 'block' : 'none') }} ><i className="fa fa-cog fa-spin fa-3x fa-fw"></i>Aguarde...</div>
+                <div className="load" style={{ display: (state.aguardar ? 'block' : 'none') }} ></div>
                 <div style={{ display: (state.aguardar ? 'none' : 'block') }}>
 
                     <Container fluid="true">
@@ -221,6 +223,7 @@ class Agenda extends Component {
                         <Row>
                             <Col md="12">
                                 <FullCalendar
+                                    height={650}
                                     ref={this.calendarRef}
                                     defaultView="dayGridMonth"
                                     plugins={[dayGridPlugin]}
@@ -237,7 +240,7 @@ class Agenda extends Component {
                                             'text': '<< Mês anterior',
                                             'click': () => this.carregarOutroMes(true)
                                         },
-                                        btnAtualizar:{
+                                        btnAtualizar: {
                                             'text': 'Atualizar',
                                             'click': () => this.onLoad()
                                         }

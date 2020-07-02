@@ -34,5 +34,9 @@ export const LancamentoService = {
             itensAgrupados: agrupados
         }
         return ApiService.post(endpoint + '/agruparCartao', filtro);
+    },
+    calendar(mes, ano) {
+        let periodo = (mes && ano) ? mes + ',' + ano : "1";
+        return ApiService.get(endpoint + '/calendar/' + periodo);
     }
 }
